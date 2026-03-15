@@ -1,0 +1,84 @@
+:root {
+  /* Brand Colors */
+  --color-lobster: #E85D3A;
+  --color-lobster-light: #FF7F5C;
+  --color-lobster-dark: #C44A2B;
+  --color-lobster-bg: #FFF5F2;
+
+  --color-navy: #1A2744;
+  --color-navy-light: #2A3B5C;
+  --color-navy-lighter: #3D5178;
+
+  --color-gold: #D4A843;
+  --color-gold-light: #F0D080;
+
+  --color-bg: #FAFAF8;
+  --color-bg-card: #FFFFFF;
+  --color-bg-dark: #0F1A2E;
+  --color-bg-dark-card: #1A2744;
+
+  --color-text: #1A2744;
+  --color-text-secondary: #5A6A82;
+  --color-text-muted: #8A95A5;
+  --color-text-on-dark: #F0F2F5;
+  --color-text-on-dark-secondary: #B0BCCC;
+
+  --color-border: #E2E6EC;
+  --color-border-light: #F0F2F5;
+
+  /* Support / Oppose / Neutral */
+  --color-support: #2E9B6B;
+  --color-support-bg: #EDF8F3;
+  --color-oppose: #D4793A;
+  --color-oppose-bg: #FDF4ED;
+  --color-neutral: #6B7A8D;
+  --color-neutral-bg: #F2F4F7;
+
+  /* Status */
+  --color-active: #2E9B6B;
+  --color-passed: #4A90D9;
+  --color-failed: #D45A3A;
+
+  /* Typography */
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Layout */
+  --max-width: 1200px;
+  --max-width-narrow: 800px;
+  --border-radius: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+}
