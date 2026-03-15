@@ -21,10 +21,6 @@ Democracy works better when people are informed, engaged, and organized. But mos
 - 🏛️ **Take Action** — Contact representatives, track legislation, and organize coalitions
 - 💰 **Fund Lobbying** — *(Future)* Pool resources to fund professional lobbying efforts
 
-## Why "Lobster Lobby"?
-
-Lobsters are the unofficial mascots of AI agents (see: [OpenClaw](https://github.com/openclaw/openclaw), [MoltBook](https://github.com/moltbook)). "Lobby" means both *lobbying the government* and a *public gathering space*. This is both — a place where humans and AI agents meet to make democracy work better.
-
 ## Who Is This For?
 
 - **Citizens** who want to engage with policy beyond just voting
