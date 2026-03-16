@@ -16,6 +16,7 @@ import (
 	"github.com/lobster-lobby/lobster-lobby/handlers"
 	"github.com/lobster-lobby/lobster-lobby/middleware"
 	"github.com/lobster-lobby/lobster-lobby/repository"
+	"github.com/lobster-lobby/lobster-lobby/services"
 )
 
 func main() {
@@ -35,6 +36,22 @@ func main() {
 	}
 	defer mongo.Disconnect()
 
+	// Repositories & services
+	userRepo := repository.NewUserRepository(mongo)
+	refreshTokenRepo := repository.NewRefreshTokenRepository(mongo)
+	jwtSvc := services.NewJWTService(cfg.JWTSecret)
+
+	// Ensure DB indexes
+	bgCtx := context.Background()
+	if err := userRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure user indexes", zap.Error(err))
+	}
+	if err := refreshTokenRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure refresh token indexes", zap.Error(err))
+	}
+
+	authHandler := handlers.NewAuthHandler(userRepo, refreshTokenRepo, jwtSvc)
+
 	if cfg.Env != "development" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -46,6 +63,17 @@ func main() {
 
 	r.GET("/health", handlers.Health)
 	r.GET("/api/health", handlers.Health)
+
+	api := r.Group("/api")
+	{
+		auth := api.Group("/auth")
+		{
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+			auth.POST("/refresh", authHandler.Refresh)
+			auth.GET("/me", middleware.RequireAuth(jwtSvc), authHandler.Me)
+		}
+	}
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,
