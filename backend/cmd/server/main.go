@@ -64,9 +64,12 @@ func main() {
 		logger.Warn("failed to ensure reputation indexes", zap.Error(err))
 	}
 
+	activityRepo := repository.NewActivityRepository(mongo)
+
 	authHandler := handlers.NewAuthHandler(userRepo, refreshTokenRepo, jwtSvc)
 	policyHandler := handlers.NewPolicyHandler(policyRepo, userRepo, jwtSvc, logger, reputationSvc)
 	apiKeyHandler := handlers.NewAPIKeyHandler(apiKeyRepo, apiKeySvc)
+	dashboardHandler := handlers.NewDashboardHandler(userRepo, policyRepo, activityRepo, reputationSvc, logger)
 
 	rateLimiter := middleware.NewRateLimiter()
 
@@ -100,7 +103,11 @@ func main() {
 			policies.GET("/:idOrSlug", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Get)
 			policies.PATCH("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Update)
 			policies.DELETE("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Delete)
+			policies.POST("/:id/bookmark", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.BookmarkToggle)
 		}
+
+		api.GET("/bookmarks", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.BookmarkList)
+		api.GET("/dashboard", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.Dashboard)
 
 		keys := api.Group("/keys")
 		keys.Use(middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc))
