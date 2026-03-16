@@ -40,7 +40,9 @@ func main() {
 	userRepo := repository.NewUserRepository(mongo)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(mongo)
 	policyRepo := repository.NewPolicyRepository(mongo)
+	apiKeyRepo := repository.NewAPIKeyRepository(mongo)
 	jwtSvc := services.NewJWTService(cfg.JWTSecret)
+	apiKeySvc := services.NewAPIKeyService()
 
 	// Ensure DB indexes
 	bgCtx := context.Background()
@@ -53,9 +55,15 @@ func main() {
 	if err := policyRepo.EnsureIndexes(bgCtx); err != nil {
 		logger.Warn("failed to ensure policy indexes", zap.Error(err))
 	}
+	if err := apiKeyRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure API key indexes", zap.Error(err))
+	}
 
 	authHandler := handlers.NewAuthHandler(userRepo, refreshTokenRepo, jwtSvc)
 	policyHandler := handlers.NewPolicyHandler(policyRepo, userRepo, jwtSvc, logger)
+	apiKeyHandler := handlers.NewAPIKeyHandler(apiKeyRepo, apiKeySvc)
+
+	rateLimiter := middleware.NewRateLimiter()
 
 	if cfg.Env != "development" {
 		gin.SetMode(gin.ReleaseMode)
@@ -76,16 +84,26 @@ func main() {
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/refresh", authHandler.Refresh)
-			auth.GET("/me", middleware.RequireAuth(jwtSvc), authHandler.Me)
+			auth.GET("/me", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), authHandler.Me)
 		}
 
 		policies := api.Group("/policies")
+		policies.Use(middleware.RateLimit(rateLimiter))
 		{
-			policies.POST("", middleware.RequireAuth(jwtSvc), policyHandler.Create)
-			policies.GET("", middleware.OptionalAuth(jwtSvc), policyHandler.List)
-			policies.GET("/:idOrSlug", middleware.OptionalAuth(jwtSvc), policyHandler.Get)
-			policies.PATCH("/:id", middleware.RequireAuth(jwtSvc), policyHandler.Update)
-			policies.DELETE("/:id", middleware.RequireAuth(jwtSvc), policyHandler.Delete)
+			policies.POST("", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Create)
+			policies.GET("", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.List)
+			policies.GET("/:idOrSlug", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Get)
+			policies.PATCH("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Update)
+			policies.DELETE("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Delete)
+		}
+
+		keys := api.Group("/keys")
+		keys.Use(middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc))
+		keys.Use(middleware.RateLimit(rateLimiter))
+		{
+			keys.POST("", apiKeyHandler.Create)
+			keys.GET("", apiKeyHandler.List)
+			keys.DELETE("/:id", apiKeyHandler.Delete)
 		}
 	}
 
