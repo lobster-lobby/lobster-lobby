@@ -242,6 +242,15 @@ func (r *PolicyRepository) DecrementEngagement(ctx context.Context, id bson.Obje
 	return err
 }
 
+// AddLinkedPolicy adds a linked policy ID to a policy's linkedPolicies array (idempotent).
+func (r *PolicyRepository) AddLinkedPolicy(ctx context.Context, policyID, linkedID bson.ObjectID) error {
+	_, err := r.coll.UpdateOne(ctx, bson.M{"_id": policyID}, bson.M{
+		"$addToSet": bson.M{"linkedPolicies": linkedID},
+		"$set":      bson.M{"updatedAt": time.Now().UTC()},
+	})
+	return err
+}
+
 func (r *PolicyRepository) GenerateSlug(ctx context.Context, title string) (string, error) {
 	baseSlug := toKebabCase(title)
 	if len(baseSlug) > 100 {

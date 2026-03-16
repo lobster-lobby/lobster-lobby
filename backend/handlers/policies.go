@@ -28,19 +28,49 @@ func NewPolicyHandler(policies *repository.PolicyRepository, users *repository.U
 	return &PolicyHandler{policies: policies, users: users, jwtSvc: jwtSvc, logger: logger, reputationSvc: reputationSvc, searchSvc: searchSvc}
 }
 
+func (h *PolicyHandler) CheckSimilar(c *gin.Context) {
+	var req struct {
+		Title   string `json:"title"`
+		Summary string `json:"summary"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.Title == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "title is required"})
+		return
+	}
+
+	similar, err := h.searchSvc.FindSimilar(c, req.Title, req.Summary)
+	if err != nil {
+		h.logger.Error("failed to find similar policies", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check for similar policies"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"similar":    similar,
+		"hasSimilar": len(similar) > 0,
+	})
+}
+
 func (h *PolicyHandler) Create(c *gin.Context) {
 	var req struct {
-		Title          string   `json:"title"`
-		Summary        string   `json:"summary"`
-		Type           string   `json:"type"`
-		Level          string   `json:"level"`
-		State          string   `json:"state"`
-		Status         string   `json:"status"`
-		ExternalURL    string   `json:"externalUrl"`
-		BillNumber     string   `json:"billNumber"`
-		Tags           []string `json:"tags"`
-		LinkedPolicies []string `json:"linkedPolicies"`
-		ParentPolicy   string   `json:"parentPolicy"`
+		Title               string   `json:"title"`
+		Summary             string   `json:"summary"`
+		Type                string   `json:"type"`
+		Level               string   `json:"level"`
+		State               string   `json:"state"`
+		Status              string   `json:"status"`
+		ExternalURL         string   `json:"externalUrl"`
+		BillNumber          string   `json:"billNumber"`
+		Tags                []string `json:"tags"`
+		LinkedPolicies      []string `json:"linkedPolicies"`
+		ParentPolicy        string   `json:"parentPolicy"`
+		SkipSimilarityCheck bool     `json:"skipSimilarityCheck"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -53,6 +83,29 @@ func (h *PolicyHandler) Create(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})
 		return
+	}
+
+	// Similarity check: if not skipped, look for duplicates first
+	var similarResults []services.SimilarPolicy
+	if !req.SkipSimilarityCheck {
+		similar, err := h.searchSvc.FindSimilar(c, req.Title, req.Summary)
+		if err != nil {
+			h.logger.Warn("similarity check failed, proceeding with creation", zap.Error(err))
+		} else if len(similar) > 0 {
+			c.JSON(http.StatusOK, gin.H{
+				"similar": similar,
+				"message": "Similar policies found. Set skipSimilarityCheck to proceed.",
+			})
+			return
+		}
+	} else {
+		// When skipping, still fetch similar for auto-linking
+		similar, err := h.searchSvc.FindSimilar(c, req.Title, req.Summary)
+		if err != nil {
+			h.logger.Warn("similarity check for auto-linking failed", zap.Error(err))
+		} else {
+			similarResults = similar
+		}
 	}
 
 	slug, err := h.policies.GenerateSlug(c, req.Title)
@@ -101,6 +154,21 @@ func (h *PolicyHandler) Create(c *gin.Context) {
 		h.logger.Error("failed to create policy", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create policy"})
 		return
+	}
+
+	// Auto-link to top similar policy if similarity > 0.6
+	if len(similarResults) > 0 && similarResults[0].Similarity > 0.6 {
+		if linkedID, err := bson.ObjectIDFromHex(similarResults[0].ID); err == nil {
+			go func() {
+				ctx := c.Request.Context()
+				if err := h.policies.AddLinkedPolicy(ctx, policy.ID, linkedID); err != nil {
+					h.logger.Warn("failed to auto-link new policy", zap.Error(err))
+				}
+				if err := h.policies.AddLinkedPolicy(ctx, linkedID, policy.ID); err != nil {
+					h.logger.Warn("failed to auto-link existing policy", zap.Error(err))
+				}
+			}()
+		}
 	}
 
 	go func() {
@@ -348,4 +416,113 @@ func (h *PolicyHandler) Delete(c *gin.Context) {
 	}()
 
 	c.JSON(http.StatusOK, gin.H{"message": "policy archived"})
+}
+
+func (h *PolicyHandler) CreateAmendment(c *gin.Context) {
+	parentIDStr := c.Param("id")
+	parentID, err := bson.ObjectIDFromHex(parentIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid policy id"})
+		return
+	}
+
+	parentPolicy, err := h.policies.FindByID(c, parentID)
+	if err != nil {
+		h.logger.Error("failed to find parent policy", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to find parent policy"})
+		return
+	}
+	if parentPolicy == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "parent policy not found"})
+		return
+	}
+
+	userIDStr, _ := c.Get(middleware.ContextUserID)
+	userID, err := bson.ObjectIDFromHex(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	var req struct {
+		Title       string   `json:"title"`
+		Summary     string   `json:"summary"`
+		Level       string   `json:"level"`
+		State       string   `json:"state"`
+		ExternalURL string   `json:"externalUrl"`
+		Tags        []string `json:"tags"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Inherit tags from parent if not provided
+	tags := req.Tags
+	if len(tags) == 0 {
+		tags = parentPolicy.Tags
+	}
+
+	slug, err := h.policies.GenerateSlug(c, req.Title)
+	if err != nil {
+		h.logger.Error("failed to generate slug", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate slug"})
+		return
+	}
+
+	amendment := &models.Policy{
+		Title:          req.Title,
+		Slug:           slug,
+		Summary:        req.Summary,
+		Type:           models.PolicyTypeProposed,
+		Level:          models.PolicyLevel(req.Level),
+		State:          req.State,
+		Status:         models.PolicyStatusActive,
+		ExternalURL:    req.ExternalURL,
+		Tags:           tags,
+		CreatedBy:      userID,
+		ParentPolicy:   &parentID,
+		LinkedPolicies: []bson.ObjectID{parentID},
+	}
+
+	if amendment.Level == "" {
+		amendment.Level = parentPolicy.Level
+	}
+	if amendment.State == "" {
+		amendment.State = parentPolicy.State
+	}
+
+	if err := amendment.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.policies.Create(c, amendment); err != nil {
+		h.logger.Error("failed to create amendment", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create amendment"})
+		return
+	}
+
+	// Bidirectional link: add amendment to parent's linkedPolicies
+	go func() {
+		ctx := c.Request.Context()
+		if err := h.policies.AddLinkedPolicy(ctx, parentID, amendment.ID); err != nil {
+			h.logger.Warn("failed to link amendment to parent", zap.Error(err))
+		}
+	}()
+
+	go func() {
+		if err := h.reputationSvc.AwardPoints(c.Request.Context(), userID, models.ActionPolicyCreated, amendment.ID.Hex(), "policy"); err != nil {
+			h.logger.Error("failed to award reputation points", zap.Error(err))
+		}
+	}()
+
+	go func() {
+		if err := h.searchSvc.IndexPolicy(c.Request.Context(), amendment); err != nil {
+			h.logger.Warn("failed to index amendment in search", zap.String("id", amendment.ID.Hex()), zap.Error(err))
+		}
+	}()
+
+	c.JSON(http.StatusCreated, gin.H{"policy": amendment})
 }
