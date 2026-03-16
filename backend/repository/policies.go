@@ -207,6 +207,41 @@ func (r *PolicyRepository) IncrementEngagement(ctx context.Context, id bson.Obje
 	return err
 }
 
+func (r *PolicyRepository) DecrementEngagement(ctx context.Context, id bson.ObjectID, field string) error {
+	validFields := map[string]bool{
+		"engagement.debateCount":   true,
+		"engagement.researchCount": true,
+		"engagement.pollCount":     true,
+		"engagement.bookmarkCount": true,
+		"engagement.viewCount":     true,
+	}
+	if !validFields[field] {
+		return nil
+	}
+
+	result := r.coll.FindOneAndUpdate(
+		ctx,
+		bson.M{"_id": id},
+		bson.M{
+			"$inc": bson.M{field: -1},
+			"$set": bson.M{"updatedAt": time.Now().UTC()},
+		},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	)
+
+	var p models.Policy
+	if err := result.Decode(&p); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil
+		}
+		return err
+	}
+
+	newScore := r.calculateHotScore(&p)
+	_, err := r.coll.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"hotScore": newScore}})
+	return err
+}
+
 func (r *PolicyRepository) GenerateSlug(ctx context.Context, title string) (string, error) {
 	baseSlug := toKebabCase(title)
 	if len(baseSlug) > 100 {
