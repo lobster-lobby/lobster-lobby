@@ -1,0 +1,4 @@
+[allowlist]
+  description = "Lobster Lobby gitleaks allowlist"
+  regexTarget = "line"
+  regexes = ['''apiKeyCharset''']
