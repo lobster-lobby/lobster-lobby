@@ -39,6 +39,7 @@ func main() {
 	// Repositories & services
 	userRepo := repository.NewUserRepository(mongo)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(mongo)
+	policyRepo := repository.NewPolicyRepository(mongo)
 	jwtSvc := services.NewJWTService(cfg.JWTSecret)
 
 	// Ensure DB indexes
@@ -49,8 +50,12 @@ func main() {
 	if err := refreshTokenRepo.EnsureIndexes(bgCtx); err != nil {
 		logger.Warn("failed to ensure refresh token indexes", zap.Error(err))
 	}
+	if err := policyRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure policy indexes", zap.Error(err))
+	}
 
 	authHandler := handlers.NewAuthHandler(userRepo, refreshTokenRepo, jwtSvc)
+	policyHandler := handlers.NewPolicyHandler(policyRepo, userRepo, jwtSvc, logger)
 
 	if cfg.Env != "development" {
 		gin.SetMode(gin.ReleaseMode)
@@ -72,6 +77,15 @@ func main() {
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/refresh", authHandler.Refresh)
 			auth.GET("/me", middleware.RequireAuth(jwtSvc), authHandler.Me)
+		}
+
+		policies := api.Group("/policies")
+		{
+			policies.POST("", middleware.RequireAuth(jwtSvc), policyHandler.Create)
+			policies.GET("", middleware.OptionalAuth(jwtSvc), policyHandler.List)
+			policies.GET("/:idOrSlug", middleware.OptionalAuth(jwtSvc), policyHandler.Get)
+			policies.PATCH("/:id", middleware.RequireAuth(jwtSvc), policyHandler.Update)
+			policies.DELETE("/:id", middleware.RequireAuth(jwtSvc), policyHandler.Delete)
 		}
 	}
 
