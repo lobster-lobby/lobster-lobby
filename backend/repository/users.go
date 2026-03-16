@@ -79,3 +79,11 @@ func (r *UserRepository) UpdateLastLogin(ctx context.Context, id bson.ObjectID) 
 	)
 	return err
 }
+
+func (r *UserRepository) UpdateReputation(ctx context.Context, id bson.ObjectID, rep models.ReputationScore) error {
+	_, err := r.coll.UpdateOne(ctx,
+		bson.M{"_id": id},
+		bson.M{"$set": bson.M{"reputation": rep, "updatedAt": time.Now().UTC()}},
+	)
+	return err
+}
