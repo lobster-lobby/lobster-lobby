@@ -123,11 +123,13 @@ func main() {
 		policies.Use(middleware.RateLimit(rateLimiter))
 		{
 			policies.POST("", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Create)
+			policies.POST("/check-similar", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.CheckSimilar)
 			policies.GET("", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.List)
 			policies.GET("/:idOrSlug", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Get)
 			policies.PATCH("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Update)
 			policies.DELETE("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Delete)
 			policies.POST("/:id/bookmark", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.BookmarkToggle)
+			policies.POST("/:id/amendments", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.CreateAmendment)
 		}
 
 		api.GET("/search", searchHandler.Search)

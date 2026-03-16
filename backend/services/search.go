@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/meilisearch/meilisearch-go"
@@ -221,6 +222,84 @@ func (s *SearchService) SearchPolicies(_ context.Context, query string, filters 
 		PerPage: perPage,
 		Query:   query,
 	}, nil
+}
+
+// SimilarPolicy represents a similar policy match from search.
+type SimilarPolicy struct {
+	ID         string  `json:"id"`
+	Title      string  `json:"title"`
+	Slug       string  `json:"slug"`
+	Similarity float64 `json:"similarity"`
+	Type       string  `json:"type"`
+}
+
+// FindSimilar searches for policies similar to the given title and summary.
+// Returns up to 5 matches with ranking score > 0.3.
+func (s *SearchService) FindSimilar(_ context.Context, title, summary string) ([]SimilarPolicy, error) {
+	if !s.ready {
+		return []SimilarPolicy{}, nil
+	}
+
+	// Combine title + first 200 chars of summary for search query
+	query := title
+	if len(summary) > 200 {
+		query += " " + summary[:200]
+	} else if summary != "" {
+		query += " " + summary
+	}
+
+	req := &meilisearch.SearchRequest{
+		Limit:            5,
+		ShowRankingScore: true,
+	}
+
+	res, err := s.client.Index(policiesIndex).Search(query, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var results []SimilarPolicy
+	for _, hit := range res.Hits {
+		var score float64
+		if raw, ok := hit["_rankingScore"]; ok {
+			_ = json.Unmarshal(raw, &score)
+		}
+		if score < 0.3 {
+			continue
+		}
+
+		var doc PolicyDocument
+		if err := hit.Decode(&doc); err != nil {
+			continue
+		}
+
+		results = append(results, SimilarPolicy{
+			ID:         doc.ID,
+			Title:      doc.Title,
+			Slug:       toSlug(doc.Title),
+			Similarity: math.Round(score*100) / 100,
+			Type:       doc.Type,
+		})
+	}
+
+	if results == nil {
+		results = []SimilarPolicy{}
+	}
+	return results, nil
+}
+
+// toSlug is a minimal helper to produce a slug from a title for search results.
+// The authoritative slug comes from the DB; this is a best-effort fallback.
+func toSlug(title string) string {
+	s := strings.ToLower(title)
+	s = strings.Map(func(r rune) rune {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			return r
+		}
+		return '-'
+	}, s)
+	s = strings.Trim(s, "-")
+	return s
 }
 
 // BulkIndex indexes a slice of policies.
