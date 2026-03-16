@@ -36,3 +36,4 @@ coverage/
 
 # MongoDB
 data/
+backend/server
