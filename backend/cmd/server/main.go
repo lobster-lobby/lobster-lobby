@@ -15,6 +15,7 @@ import (
 	"github.com/lobster-lobby/lobster-lobby/config"
 	"github.com/lobster-lobby/lobster-lobby/handlers"
 	"github.com/lobster-lobby/lobster-lobby/middleware"
+	"github.com/lobster-lobby/lobster-lobby/models"
 	"github.com/lobster-lobby/lobster-lobby/repository"
 	"github.com/lobster-lobby/lobster-lobby/services"
 )
@@ -45,6 +46,7 @@ func main() {
 	jwtSvc := services.NewJWTService(cfg.JWTSecret)
 	apiKeySvc := services.NewAPIKeyService()
 	reputationSvc := services.NewReputationService(reputationRepo, userRepo)
+	searchSvc := services.NewSearchService(cfg.MeilisearchURL, cfg.MeilisearchKey, logger)
 
 	// Ensure DB indexes
 	bgCtx := context.Background()
@@ -66,10 +68,32 @@ func main() {
 
 	activityRepo := repository.NewActivityRepository(mongo)
 
+	// Optionally rebuild search index from MongoDB on startup
+	if cfg.RebuildIndex {
+		bgCtxSearch := context.Background()
+		go func() {
+			policies, _, err := policyRepo.List(bgCtxSearch, repository.PolicyListOpts{Page: 1, PerPage: 10000, Sort: "hot"})
+			if err != nil {
+				logger.Warn("failed to load policies for index rebuild", zap.Error(err))
+				return
+			}
+			ptrs := make([]*models.Policy, len(policies))
+			for i := range policies {
+				ptrs[i] = &policies[i]
+			}
+			if err := searchSvc.BulkIndex(bgCtxSearch, ptrs); err != nil {
+				logger.Warn("failed to bulk index policies", zap.Error(err))
+				return
+			}
+			logger.Info("search index rebuilt", zap.Int("count", len(policies)))
+		}()
+	}
+
 	authHandler := handlers.NewAuthHandler(userRepo, refreshTokenRepo, jwtSvc)
-	policyHandler := handlers.NewPolicyHandler(policyRepo, userRepo, jwtSvc, logger, reputationSvc)
+	policyHandler := handlers.NewPolicyHandler(policyRepo, userRepo, jwtSvc, logger, reputationSvc, searchSvc)
 	apiKeyHandler := handlers.NewAPIKeyHandler(apiKeyRepo, apiKeySvc)
 	dashboardHandler := handlers.NewDashboardHandler(userRepo, policyRepo, activityRepo, reputationSvc, logger)
+	searchHandler := handlers.NewSearchHandler(searchSvc, logger)
 
 	rateLimiter := middleware.NewRateLimiter()
 
@@ -106,6 +130,7 @@ func main() {
 			policies.POST("/:id/bookmark", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.BookmarkToggle)
 		}
 
+		api.GET("/search", searchHandler.Search)
 		api.GET("/bookmarks", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.BookmarkList)
 		api.GET("/dashboard", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.Dashboard)
 

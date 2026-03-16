@@ -9,6 +9,9 @@ type Config struct {
 	JWTSecret       string
 	CORSOrigins     string
 	Env             string
+	MeilisearchURL  string
+	MeilisearchKey  string
+	RebuildIndex    bool
 }
 
 func Load() *Config {
@@ -19,6 +22,9 @@ func Load() *Config {
 		JWTSecret:       getEnv("JWT_SECRET", ""),
 		CORSOrigins:     getEnv("CORS_ORIGINS", "http://localhost:5173"),
 		Env:             getEnv("ENV", "development"),
+		MeilisearchURL:  getEnv("MEILISEARCH_URL", "http://localhost:7700"),
+		MeilisearchKey:  getEnv("MEILISEARCH_KEY", ""),
+		RebuildIndex:    os.Getenv("REBUILD_SEARCH_INDEX") == "true",
 	}
 }
 

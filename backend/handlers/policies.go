@@ -21,10 +21,11 @@ type PolicyHandler struct {
 	jwtSvc        *services.JWTService
 	logger        *zap.Logger
 	reputationSvc *services.ReputationService
+	searchSvc     *services.SearchService
 }
 
-func NewPolicyHandler(policies *repository.PolicyRepository, users *repository.UserRepository, jwtSvc *services.JWTService, logger *zap.Logger, reputationSvc *services.ReputationService) *PolicyHandler {
-	return &PolicyHandler{policies: policies, users: users, jwtSvc: jwtSvc, logger: logger, reputationSvc: reputationSvc}
+func NewPolicyHandler(policies *repository.PolicyRepository, users *repository.UserRepository, jwtSvc *services.JWTService, logger *zap.Logger, reputationSvc *services.ReputationService, searchSvc *services.SearchService) *PolicyHandler {
+	return &PolicyHandler{policies: policies, users: users, jwtSvc: jwtSvc, logger: logger, reputationSvc: reputationSvc, searchSvc: searchSvc}
 }
 
 func (h *PolicyHandler) Create(c *gin.Context) {
@@ -105,6 +106,12 @@ func (h *PolicyHandler) Create(c *gin.Context) {
 	go func() {
 		if err := h.reputationSvc.AwardPoints(c.Request.Context(), userID, models.ActionPolicyCreated, policy.ID.Hex(), "policy"); err != nil {
 			h.logger.Error("failed to award reputation points", zap.Error(err))
+		}
+	}()
+
+	go func() {
+		if err := h.searchSvc.IndexPolicy(c.Request.Context(), policy); err != nil {
+			h.logger.Warn("failed to index policy in search", zap.String("id", policy.ID.Hex()), zap.Error(err))
 		}
 	}()
 
@@ -279,6 +286,13 @@ func (h *PolicyHandler) Update(c *gin.Context) {
 	}
 
 	updatedPolicy, _ := h.policies.FindByID(c, policyID)
+	if updatedPolicy != nil {
+		go func() {
+			if err := h.searchSvc.IndexPolicy(c.Request.Context(), updatedPolicy); err != nil {
+				h.logger.Warn("failed to re-index policy in search", zap.String("id", policyID.Hex()), zap.Error(err))
+			}
+		}()
+	}
 	c.JSON(http.StatusOK, gin.H{"policy": updatedPolicy})
 }
 
@@ -326,6 +340,12 @@ func (h *PolicyHandler) Delete(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete policy"})
 		return
 	}
+
+	go func() {
+		if err := h.searchSvc.RemovePolicy(c.Request.Context(), policyID.Hex()); err != nil {
+			h.logger.Warn("failed to remove policy from search", zap.String("id", policyID.Hex()), zap.Error(err))
+		}
+	}()
 
 	c.JSON(http.StatusOK, gin.H{"message": "policy archived"})
 }
