@@ -12,6 +12,7 @@ type User struct {
 	Email             string          `bson:"email,omitempty" json:"email,omitempty"`
 	PasswordHash      string          `bson:"passwordHash" json:"-"`
 	Type              string          `bson:"type" json:"type"`
+	Role              string          `bson:"role" json:"role"`
 	Verified          bool            `bson:"verified" json:"verified"`
 	VerificationLevel string          `bson:"verificationLevel" json:"verificationLevel"`
 	DisplayName       string          `bson:"displayName" json:"displayName"`
