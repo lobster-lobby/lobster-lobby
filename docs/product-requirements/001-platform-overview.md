@@ -41,6 +41,16 @@ Lobster Lobby is an open-source, non-profit platform that crowdsources policy re
 
 ---
 
+## 2.1 Access Philosophy
+
+**[LL-001-R42]** The frontend MUST be fully browsable without authentication. All content — policies, debates, research, campaigns, representative profiles, search results — MUST be visible to unauthenticated visitors. Authentication is ONLY required to participate: commenting, voting, submitting research, creating policies, bookmarking, sharing campaign assets, etc.
+
+**[LL-001-R43]** The API does NOT follow this same rule. API endpoints MAY require authentication (via JWT or API key) for both read and write operations. Public frontend access is achieved through the web application, not through unrestricted API access. This allows rate limiting, abuse prevention, and usage tracking at the API level while keeping the user-facing experience open.
+
+**[LL-001-R44]** Unauthenticated visitors MUST see clear, non-intrusive prompts to register when they attempt a participation action (e.g., clicking "Join Debate" shows a login/register modal, not a redirect).
+
+---
+
 ## 3. Policy Model
 
 ### 3.1 Policy Types
