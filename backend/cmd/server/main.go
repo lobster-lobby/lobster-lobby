@@ -41,8 +41,10 @@ func main() {
 	refreshTokenRepo := repository.NewRefreshTokenRepository(mongo)
 	policyRepo := repository.NewPolicyRepository(mongo)
 	apiKeyRepo := repository.NewAPIKeyRepository(mongo)
+	reputationRepo := repository.NewReputationRepository(mongo)
 	jwtSvc := services.NewJWTService(cfg.JWTSecret)
 	apiKeySvc := services.NewAPIKeyService()
+	reputationSvc := services.NewReputationService(reputationRepo, userRepo)
 
 	// Ensure DB indexes
 	bgCtx := context.Background()
@@ -58,9 +60,12 @@ func main() {
 	if err := apiKeyRepo.EnsureIndexes(bgCtx); err != nil {
 		logger.Warn("failed to ensure API key indexes", zap.Error(err))
 	}
+	if err := reputationRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure reputation indexes", zap.Error(err))
+	}
 
 	authHandler := handlers.NewAuthHandler(userRepo, refreshTokenRepo, jwtSvc)
-	policyHandler := handlers.NewPolicyHandler(policyRepo, userRepo, jwtSvc, logger)
+	policyHandler := handlers.NewPolicyHandler(policyRepo, userRepo, jwtSvc, logger, reputationSvc)
 	apiKeyHandler := handlers.NewAPIKeyHandler(apiKeyRepo, apiKeySvc)
 
 	rateLimiter := middleware.NewRateLimiter()

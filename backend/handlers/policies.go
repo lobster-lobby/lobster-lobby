@@ -16,14 +16,15 @@ import (
 )
 
 type PolicyHandler struct {
-	policies *repository.PolicyRepository
-	users    *repository.UserRepository
-	jwtSvc   *services.JWTService
-	logger   *zap.Logger
+	policies      *repository.PolicyRepository
+	users         *repository.UserRepository
+	jwtSvc        *services.JWTService
+	logger        *zap.Logger
+	reputationSvc *services.ReputationService
 }
 
-func NewPolicyHandler(policies *repository.PolicyRepository, users *repository.UserRepository, jwtSvc *services.JWTService, logger *zap.Logger) *PolicyHandler {
-	return &PolicyHandler{policies: policies, users: users, jwtSvc: jwtSvc, logger: logger}
+func NewPolicyHandler(policies *repository.PolicyRepository, users *repository.UserRepository, jwtSvc *services.JWTService, logger *zap.Logger, reputationSvc *services.ReputationService) *PolicyHandler {
+	return &PolicyHandler{policies: policies, users: users, jwtSvc: jwtSvc, logger: logger, reputationSvc: reputationSvc}
 }
 
 func (h *PolicyHandler) Create(c *gin.Context) {
@@ -100,6 +101,12 @@ func (h *PolicyHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create policy"})
 		return
 	}
+
+	go func() {
+		if err := h.reputationSvc.AwardPoints(c.Request.Context(), userID, models.ActionPolicyCreated, policy.ID.Hex(), "policy"); err != nil {
+			h.logger.Error("failed to award reputation points", zap.Error(err))
+		}
+	}()
 
 	c.JSON(http.StatusCreated, gin.H{"policy": policy})
 }
