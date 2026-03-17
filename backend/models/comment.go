@@ -16,7 +16,8 @@ type Comment struct {
 	Content    string         `bson:"content" json:"content"`
 	Upvotes    int            `bson:"upvotes" json:"upvotes"`
 	Downvotes  int            `bson:"downvotes" json:"downvotes"`
-	Score      int            `bson:"score" json:"score"`
+	Score       int     `bson:"score" json:"score"`
+	WilsonScore float64 `bson:"wilsonScore" json:"wilsonScore"`
 	ReplyCount int            `bson:"replyCount" json:"replyCount"`
 	Flagged    bool           `bson:"flagged" json:"flagged"`
 	FlagCount  int            `bson:"flagCount" json:"flagCount"`

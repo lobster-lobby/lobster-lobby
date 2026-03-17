@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../ui'
 import type { Comment, Position } from '../../types/debate'
@@ -109,7 +111,9 @@ export default function CommentComposer({ policyId, onCommentCreated, parentId }
 
         {preview ? (
           <div className={styles.preview}>
-            {content || 'Nothing to preview'}
+            {content
+              ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+              : 'Nothing to preview'}
           </div>
         ) : (
           <textarea

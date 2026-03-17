@@ -1,4 +1,6 @@
 import { useState, useCallback } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useAuth } from '../../hooks/useAuth'
 import { UserBadge, VoteButtons } from '../ui'
 import CommentComposer from './CommentComposer'
@@ -103,7 +105,9 @@ export default function DebateComment({ comment, policyId, depth = 0 }: DebateCo
         </span>
       </div>
 
-      <div className={styles.content}>{comment.content}</div>
+      <div className={styles.content}>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.content}</ReactMarkdown>
+      </div>
 
       <div className={styles.actions}>
         <VoteButtons

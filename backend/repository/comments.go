@@ -238,13 +238,14 @@ func (r *CommentRepository) React(ctx context.Context, userID, commentID bson.Ob
 		}
 	}
 
-	// Recalculate score
+	// Recalculate score and Wilson score
 	var comment models.Comment
 	if err := r.comments.FindOne(ctx, bson.M{"_id": commentID}).Decode(&comment); err == nil {
 		score := comment.Upvotes - comment.Downvotes
+		wilson := WilsonScore(comment.Upvotes, comment.Downvotes, comment.CreatedAt)
 		_, _ = r.comments.UpdateOne(ctx,
 			bson.M{"_id": commentID},
-			bson.M{"$set": bson.M{"score": score}},
+			bson.M{"$set": bson.M{"score": score, "wilsonScore": wilson}},
 		)
 	}
 
@@ -337,9 +338,7 @@ func (r *CommentRepository) getSortDoc(sort string) bson.D {
 	case "discussed":
 		return bson.D{{Key: "replyCount", Value: -1}, {Key: "createdAt", Value: -1}}
 	case "best":
-		// For "best" sort, we use score desc and apply Wilson in-memory
-		// A full Wilson sort would require a computed field; score approximates it
-		return bson.D{{Key: "score", Value: -1}, {Key: "createdAt", Value: -1}}
+		return bson.D{{Key: "wilsonScore", Value: -1}, {Key: "createdAt", Value: -1}}
 	default:
 		return bson.D{{Key: "score", Value: -1}, {Key: "createdAt", Value: -1}}
 	}

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
@@ -67,6 +68,11 @@ func (h *DebateHandler) CreateComment(c *gin.Context) {
 		return
 	}
 
+	if len(req.Content) > 10000 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "content exceeds maximum length of 10000 characters"})
+		return
+	}
+
 	comment := &models.Comment{
 		PolicyID:   policyID,
 		AuthorID:   userID,
@@ -93,21 +99,21 @@ func (h *DebateHandler) CreateComment(c *gin.Context) {
 
 	// Auto-set user's stance
 	go func() {
-		if err := h.comments.SetStance(c.Request.Context(), userID, policyID, req.Position); err != nil {
+		if err := h.comments.SetStance(context.Background(), userID, policyID, req.Position); err != nil {
 			h.logger.Warn("failed to set stance", zap.Error(err))
 		}
 	}()
 
 	// Award reputation points
 	go func() {
-		if err := h.reputationSvc.AwardPoints(c.Request.Context(), userID, models.ActionCommentPosted, created.ID.Hex(), "comment"); err != nil {
+		if err := h.reputationSvc.AwardPoints(context.Background(), userID, models.ActionCommentPosted, created.ID.Hex(), "comment"); err != nil {
 			h.logger.Error("failed to award reputation points", zap.Error(err))
 		}
 	}()
 
 	// Increment debate engagement count
 	go func() {
-		if err := h.policies.IncrementEngagement(c.Request.Context(), policyID, "engagement.debateCount"); err != nil {
+		if err := h.policies.IncrementEngagement(context.Background(), policyID, "engagement.debateCount"); err != nil {
 			h.logger.Warn("failed to increment debate count", zap.Error(err))
 		}
 	}()
@@ -216,6 +222,11 @@ func (h *DebateHandler) EditComment(c *gin.Context) {
 		return
 	}
 
+	if len(req.Content) > 10000 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "content exceeds maximum length of 10000 characters"})
+		return
+	}
+
 	if err := h.comments.Update(c, commentID, userID, req.Content); err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.JSON(http.StatusForbidden, gin.H{"error": "you can only edit your own comments"})
@@ -267,7 +278,7 @@ func (h *DebateHandler) ReactToComment(c *gin.Context) {
 	// Award reputation to the comment author
 	if req.Value != 0 {
 		go func() {
-			comment, err := h.comments.FindByID(c.Request.Context(), commentID)
+			comment, err := h.comments.FindByID(context.Background(), commentID)
 			if err != nil || comment == nil {
 				return
 			}
@@ -275,7 +286,7 @@ func (h *DebateHandler) ReactToComment(c *gin.Context) {
 			if req.Value == -1 {
 				action = models.ActionDownvoteReceived
 			}
-			if err := h.reputationSvc.AwardPoints(c.Request.Context(), comment.AuthorID, action, commentID.Hex(), "comment"); err != nil {
+			if err := h.reputationSvc.AwardPoints(context.Background(), comment.AuthorID, action, commentID.Hex(), "comment"); err != nil {
 				h.logger.Warn("failed to award reaction reputation", zap.Error(err))
 			}
 		}()
