@@ -222,7 +222,7 @@ func (h *PolicyHandler) List(c *gin.Context) {
 }
 
 func (h *PolicyHandler) Get(c *gin.Context) {
-	idOrSlug := c.Param("idOrSlug")
+	idOrSlug := c.Param("id")
 
 	var policy *models.Policy
 	var err error

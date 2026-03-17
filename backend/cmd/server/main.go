@@ -155,7 +155,7 @@ func main() {
 			policies.POST("", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Create)
 			policies.POST("/check-similar", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.CheckSimilar)
 			policies.GET("", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.List)
-			policies.GET("/:idOrSlug", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Get)
+			policies.GET("/:id", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Get)
 			policies.PATCH("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Update)
 			policies.DELETE("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Delete)
 			policies.POST("/:id/bookmark", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.BookmarkToggle)
@@ -195,7 +195,7 @@ func main() {
 		{
 			campaigns.POST("", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignHandler.Create)
 			campaigns.GET("", campaignHandler.List)
-			campaigns.GET("/:idOrSlug", campaignHandler.Get)
+			campaigns.GET("/:id", campaignHandler.Get)
 			campaigns.PATCH("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignHandler.Update)
 			campaigns.PATCH("/:id/status", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignHandler.UpdateStatus)
 		}
@@ -212,6 +212,17 @@ func main() {
 			keys.GET("", apiKeyHandler.List)
 			keys.DELETE("/:id", apiKeyHandler.Delete)
 		}
+	}
+
+	// Serve frontend static files in production
+	if cfg.StaticDir != "" {
+		r.Static("/assets", cfg.StaticDir+"/assets")
+		r.StaticFile("/favicon.ico", cfg.StaticDir+"/favicon.ico")
+		r.StaticFile("/favicon.svg", cfg.StaticDir+"/favicon.svg")
+		r.NoRoute(func(c *gin.Context) {
+			c.File(cfg.StaticDir + "/index.html")
+		})
+		logger.Info("serving static files", zap.String("dir", cfg.StaticDir))
 	}
 
 	srv := &http.Server{

@@ -155,7 +155,7 @@ func (h *CampaignHandler) List(c *gin.Context) {
 }
 
 func (h *CampaignHandler) Get(c *gin.Context) {
-	idOrSlug := c.Param("idOrSlug")
+	idOrSlug := c.Param("id")
 
 	var campaign *models.Campaign
 	var err error
