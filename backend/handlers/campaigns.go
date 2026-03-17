@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
@@ -18,6 +19,7 @@ type CampaignHandler struct {
 	campaigns     *repository.CampaignRepository
 	policies      *repository.PolicyRepository
 	users         *repository.UserRepository
+	events        *repository.CampaignEventRepository
 	jwtSvc        *services.JWTService
 	reputationSvc *services.ReputationService
 	logger        *zap.Logger
@@ -27,6 +29,7 @@ func NewCampaignHandler(
 	campaigns *repository.CampaignRepository,
 	policies *repository.PolicyRepository,
 	users *repository.UserRepository,
+	events *repository.CampaignEventRepository,
 	jwtSvc *services.JWTService,
 	reputationSvc *services.ReputationService,
 	logger *zap.Logger,
@@ -35,6 +38,7 @@ func NewCampaignHandler(
 		campaigns:     campaigns,
 		policies:      policies,
 		users:         users,
+		events:        events,
 		jwtSvc:        jwtSvc,
 		reputationSvc: reputationSvc,
 		logger:        logger,
@@ -122,6 +126,24 @@ func (h *CampaignHandler) Create(c *gin.Context) {
 		h.logger.Error("failed to create campaign", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create campaign"})
 		return
+	}
+
+	// Create "created" event
+	if h.events != nil {
+		go func() {
+			event := &models.CampaignEvent{
+				CampaignID:  campaign.ID,
+				Type:        models.CampaignEventCreated,
+				Title:       "Campaign Created",
+				Description: "Campaign '" + campaign.Title + "' was launched",
+				Metadata: map[string]any{
+					"campaignTitle": campaign.Title,
+				},
+			}
+			if err := h.events.Create(context.Background(), event); err != nil {
+				h.logger.Warn("failed to create campaign_created event", zap.Error(err))
+			}
+		}()
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"campaign": campaign})
@@ -338,10 +360,31 @@ func (h *CampaignHandler) UpdateStatus(c *gin.Context) {
 		return
 	}
 
+	oldStatus := campaign.Status
+
 	if err := h.campaigns.UpdateStatus(c, idStr, status); err != nil {
 		h.logger.Error("failed to update campaign status", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update campaign status"})
 		return
+	}
+
+	// Create "status_change" event
+	if h.events != nil && oldStatus != status {
+		go func() {
+			event := &models.CampaignEvent{
+				CampaignID:  campaign.ID,
+				Type:        models.CampaignEventStatusChange,
+				Title:       "Status Changed",
+				Description: "Campaign status changed from " + string(oldStatus) + " to " + string(status),
+				Metadata: map[string]any{
+					"oldStatus": string(oldStatus),
+					"newStatus": string(status),
+				},
+			}
+			if err := h.events.Create(context.Background(), event); err != nil {
+				h.logger.Warn("failed to create status_change event", zap.Error(err))
+			}
+		}()
 	}
 
 	updatedCampaign, err := h.campaigns.GetByID(c, idStr)
