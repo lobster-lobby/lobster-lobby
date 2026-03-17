@@ -1,0 +1,39 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-xs);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ll-space-xs);
+  padding: var(--ll-space-xs) var(--ll-space-sm);
+  font-size: 0.875rem;
+  color: var(--ll-text-muted);
+  background: var(--ll-bg-elevated);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-sm);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.button:hover {
+  background: var(--ll-border);
+}
+
+.count {
+  font-weight: 500;
+}
+
+.upvote.active {
+  color: var(--ll-support);
+  background: var(--ll-support-tint);
+  border-color: var(--ll-support);
+}
+
+.downvote.active {
+  color: var(--ll-oppose);
+  background: var(--ll-oppose-tint);
+  border-color: var(--ll-oppose);
+}
