@@ -1,4 +1,4 @@
-import { Button } from '../components/ui'
+import { Button, LobsterMascot } from '../components/ui'
 import {
   BookOpenIcon,
   DebateIcon,
@@ -73,68 +73,6 @@ const forCards = [
   },
 ]
 
-function HeroGraphic() {
-  return (
-    <svg className="hero-graphic" viewBox="0 0 480 400" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Lobster Lobby platform illustration">
-      {/* Background circles */}
-      <circle cx="240" cy="200" r="160" fill="var(--ll-primary)" opacity="0.06" />
-      <circle cx="240" cy="200" r="120" fill="var(--ll-primary)" opacity="0.08" />
-      <circle cx="240" cy="200" r="80" fill="var(--ll-primary)" opacity="0.10" />
-
-      {/* Central lobster silhouette */}
-      <g transform="translate(190, 140)" stroke="var(--ll-primary)" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        {/* Body */}
-        <ellipse cx="50" cy="60" rx="30" ry="40" fill="var(--ll-primary)" opacity="0.15" />
-        {/* Claws */}
-        <path d="M20 40 L-5 20 Q-15 10 -5 5 Q5 0 10 10 L20 30" fill="var(--ll-primary)" opacity="0.12" />
-        <path d="M80 40 L105 20 Q115 10 105 5 Q95 0 90 10 L80 30" fill="var(--ll-primary)" opacity="0.12" />
-        {/* Antennae */}
-        <path d="M35 25 Q25 5 15 -5" />
-        <path d="M65 25 Q75 5 85 -5" />
-        {/* Tail */}
-        <path d="M35 100 Q50 120 65 100" />
-        <path d="M30 105 Q50 130 70 105" />
-      </g>
-
-      {/* Floating UI cards */}
-      <g opacity="0.9">
-        {/* Research card */}
-        <rect x="50" y="60" width="120" height="60" rx="10" fill="var(--ll-bg-card)" stroke="var(--ll-border)" strokeWidth="1" />
-        <rect x="62" y="74" width="40" height="6" rx="3" fill="var(--ll-info)" opacity="0.7" />
-        <rect x="62" y="86" width="80" height="4" rx="2" fill="var(--ll-text-muted)" opacity="0.4" />
-        <rect x="62" y="96" width="60" height="4" rx="2" fill="var(--ll-text-muted)" opacity="0.3" />
-
-        {/* Debate card */}
-        <rect x="310" y="80" width="120" height="60" rx="10" fill="var(--ll-bg-card)" stroke="var(--ll-border)" strokeWidth="1" />
-        <circle cx="332" cy="100" r="8" fill="var(--ll-support)" opacity="0.2" stroke="var(--ll-support)" strokeWidth="1.5" />
-        <circle cx="352" cy="100" r="8" fill="var(--ll-primary)" opacity="0.2" stroke="var(--ll-primary)" strokeWidth="1.5" />
-        <rect x="322" y="116" width="70" height="4" rx="2" fill="var(--ll-text-muted)" opacity="0.4" />
-
-        {/* Impact card */}
-        <rect x="80" y="280" width="110" height="55" rx="10" fill="var(--ll-bg-card)" stroke="var(--ll-border)" strokeWidth="1" />
-        <polyline points="95,315 110,305 125,310 140,295 155,300 170,290" stroke="var(--ll-support)" strokeWidth="2" fill="none" strokeLinecap="round" />
-
-        {/* Vote card */}
-        <rect x="300" y="270" width="100" height="50" rx="10" fill="var(--ll-bg-card)" stroke="var(--ll-border)" strokeWidth="1" />
-        <rect x="315" y="284" width="30" height="22" rx="4" fill="var(--ll-support)" opacity="0.3" />
-        <rect x="350" y="290" width="30" height="16" rx="4" fill="var(--ll-primary)" opacity="0.3" />
-      </g>
-
-      {/* Connection dots */}
-      <circle cx="170" cy="130" r="3" fill="var(--ll-primary)" opacity="0.3" />
-      <circle cx="310" cy="150" r="3" fill="var(--ll-primary)" opacity="0.3" />
-      <circle cx="190" cy="280" r="3" fill="var(--ll-primary)" opacity="0.3" />
-      <circle cx="300" cy="260" r="3" fill="var(--ll-primary)" opacity="0.3" />
-
-      {/* Dashed connection lines */}
-      <line x1="170" y1="130" x2="190" y2="160" stroke="var(--ll-primary)" strokeWidth="1" strokeDasharray="4 4" opacity="0.2" />
-      <line x1="310" y1="150" x2="290" y2="170" stroke="var(--ll-primary)" strokeWidth="1" strokeDasharray="4 4" opacity="0.2" />
-      <line x1="190" y1="280" x2="210" y2="250" stroke="var(--ll-primary)" strokeWidth="1" strokeDasharray="4 4" opacity="0.2" />
-      <line x1="300" y1="260" x2="280" y2="240" stroke="var(--ll-primary)" strokeWidth="1" strokeDasharray="4 4" opacity="0.2" />
-    </svg>
-  )
-}
-
 export default function Home() {
   const { isAuthenticated } = useAuth()
 
@@ -181,7 +119,7 @@ export default function Home() {
             </div>
           </div>
           <div className="hero-illustration">
-            <HeroGraphic />
+            <LobsterMascot pose="waving" width={280} height={280} className="hero-mascot" />
           </div>
         </div>
       </section>
