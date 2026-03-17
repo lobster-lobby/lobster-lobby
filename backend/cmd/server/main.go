@@ -41,6 +41,7 @@ func main() {
 	userRepo := repository.NewUserRepository(mongo)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(mongo)
 	policyRepo := repository.NewPolicyRepository(mongo)
+	campaignRepo := repository.NewCampaignRepository(mongo)
 	apiKeyRepo := repository.NewAPIKeyRepository(mongo)
 	reputationRepo := repository.NewReputationRepository(mongo)
 	jwtSvc := services.NewJWTService(cfg.JWTSecret)
@@ -64,6 +65,9 @@ func main() {
 	}
 	if err := reputationRepo.EnsureIndexes(bgCtx); err != nil {
 		logger.Warn("failed to ensure reputation indexes", zap.Error(err))
+	}
+	if err := campaignRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure campaign indexes", zap.Error(err))
 	}
 
 	commentRepo := repository.NewCommentRepository(mongo)
@@ -96,6 +100,7 @@ func main() {
 
 	authHandler := handlers.NewAuthHandler(userRepo, refreshTokenRepo, jwtSvc)
 	policyHandler := handlers.NewPolicyHandler(policyRepo, userRepo, jwtSvc, logger, reputationSvc, searchSvc)
+	campaignHandler := handlers.NewCampaignHandler(campaignRepo, policyRepo, userRepo, jwtSvc, reputationSvc, logger)
 	apiKeyHandler := handlers.NewAPIKeyHandler(apiKeyRepo, apiKeySvc)
 	dashboardHandler := handlers.NewDashboardHandler(userRepo, policyRepo, activityRepo, reputationSvc, logger)
 	searchHandler := handlers.NewSearchHandler(searchSvc, logger)
@@ -148,6 +153,7 @@ func main() {
 			policies.DELETE("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Delete)
 			policies.POST("/:id/bookmark", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.BookmarkToggle)
 			policies.POST("/:id/amendments", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.CreateAmendment)
+			policies.GET("/:id/campaigns", campaignHandler.ListByPolicy)
 
 			// Debate routes
 			policies.POST("/:id/debate", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.CreateComment)
@@ -170,6 +176,16 @@ func main() {
 			policies.GET("/:id/research/:researchId", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), researchHandler.GetByID)
 			policies.PATCH("/:id/research/:researchId", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), researchHandler.Update)
 			policies.POST("/:id/research/:researchId/react", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), researchHandler.React)
+		}
+
+		campaigns := api.Group("/campaigns")
+		campaigns.Use(middleware.RateLimit(rateLimiter))
+		{
+			campaigns.POST("", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignHandler.Create)
+			campaigns.GET("", campaignHandler.List)
+			campaigns.GET("/:idOrSlug", campaignHandler.Get)
+			campaigns.PATCH("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignHandler.Update)
+			campaigns.PATCH("/:id/status", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignHandler.UpdateStatus)
 		}
 
 		api.GET("/search", searchHandler.Search)

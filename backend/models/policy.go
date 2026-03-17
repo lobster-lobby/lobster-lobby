@@ -26,11 +26,12 @@ const (
 type PolicyStatus string
 
 const (
-	PolicyStatusActive    PolicyStatus = "active"
-	PolicyStatusPassed    PolicyStatus = "passed"
-	PolicyStatusFailed    PolicyStatus = "failed"
-	PolicyStatusWithdrawn PolicyStatus = "withdrawn"
-	PolicyStatusArchived  PolicyStatus = "archived"
+	PolicyStatusActive            PolicyStatus = "active"
+	PolicyStatusPassed            PolicyStatus = "passed"
+	PolicyStatusFailed            PolicyStatus = "failed"
+	PolicyStatusWithdrawn         PolicyStatus = "withdrawn"
+	PolicyStatusArchived          PolicyStatus = "archived"
+	PolicyStatusReadyForCampaign  PolicyStatus = "ready_for_campaign"
 )
 
 type EngagementStats struct {
