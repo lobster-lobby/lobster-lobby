@@ -23,6 +23,7 @@ export interface ResearchResponse {
   downvotes: number
   score: number
   citedBy: number
+  qualityScore: number
   userVote: number
   createdAt: string
   updatedAt: string

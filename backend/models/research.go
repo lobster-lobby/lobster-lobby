@@ -17,8 +17,9 @@ type Research struct {
 	Sources    []Source      `bson:"sources" json:"sources"`
 	Upvotes    int           `bson:"upvotes" json:"upvotes"`
 	Downvotes  int           `bson:"downvotes" json:"downvotes"`
-	Score      int           `bson:"score" json:"score"`
-	CitedBy    int           `bson:"citedBy" json:"citedBy"`
+	Score        int           `bson:"score" json:"score"`
+	QualityScore float64       `bson:"qualityScore" json:"qualityScore"`
+	CitedBy      int           `bson:"citedBy" json:"citedBy"`
 	CreatedAt  time.Time     `bson:"createdAt" json:"createdAt"`
 	UpdatedAt  time.Time     `bson:"updatedAt" json:"updatedAt"`
 }
@@ -45,6 +46,7 @@ type ResearchResponse struct {
 	Upvotes        int           `json:"upvotes"`
 	Downvotes      int           `json:"downvotes"`
 	Score          int           `json:"score"`
+	QualityScore   float64       `json:"qualityScore"`
 	CitedBy        int           `json:"citedBy"`
 	UserVote       int           `json:"userVote"`
 	CreatedAt      time.Time     `json:"createdAt"`

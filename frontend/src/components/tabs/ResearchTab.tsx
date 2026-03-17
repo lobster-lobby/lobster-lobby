@@ -22,6 +22,7 @@ const typeFilters: { id: string; label: string }[] = [
 const sortOptions = [
   { value: 'newest', label: 'Newest' },
   { value: 'top', label: 'Top Rated' },
+  { value: 'quality', label: 'Quality' },
   { value: 'most_cited', label: 'Most Cited' },
 ]
 
@@ -69,7 +70,7 @@ export default function ResearchTab({ policyId }: ResearchTabProps) {
   const handleVote = async (id: string, value: number) => {
     if (!isAuthenticated) return
 
-    // Optimistic update
+    // Optimistic update (toggle logic)
     setResearch((prev) =>
       prev.map((r) => {
         if (r.id !== id) return r
@@ -77,33 +78,37 @@ export default function ResearchTab({ policyId }: ResearchTabProps) {
         let upvotes = r.upvotes
         let downvotes = r.downvotes
 
+        // Compute new value (toggle)
+        const newValue = oldVote === value ? 0 : value
+
         // Remove old vote
         if (oldVote === 1) upvotes--
         else if (oldVote === -1) downvotes--
 
         // Add new vote
-        if (value === 1) upvotes++
-        else if (value === -1) downvotes++
+        if (newValue === 1) upvotes++
+        else if (newValue === -1) downvotes++
 
         return {
           ...r,
           upvotes,
           downvotes,
           score: upvotes - downvotes,
-          userVote: value,
+          userVote: newValue,
         }
       })
     )
 
     try {
       const token = getAccessToken()
-      await fetch(`/api/policies/${policyId}/research/${id}/react`, {
+      const type = value === 1 ? 'up' : 'down'
+      await fetch(`/api/policies/${policyId}/research/${id}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ value }),
+        body: JSON.stringify({ type }),
       })
     } catch {
       // Revert on error - refetch

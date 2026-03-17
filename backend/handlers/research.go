@@ -263,7 +263,14 @@ func (h *ResearchHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"research": updated})
 }
 
-func (h *ResearchHandler) React(c *gin.Context) {
+func (h *ResearchHandler) Vote(c *gin.Context) {
+	policyIDStr := c.Param("id")
+	policyID, err := bson.ObjectIDFromHex(policyIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid policy id"})
+		return
+	}
+
 	researchIDStr := c.Param("researchId")
 	researchID, err := bson.ObjectIDFromHex(researchIDStr)
 	if err != nil {
@@ -278,8 +285,19 @@ func (h *ResearchHandler) React(c *gin.Context) {
 		return
 	}
 
+	// Look up research to prevent self-voting
+	research, err := h.research.GetByID(c, policyID, researchID, nil)
+	if err != nil || research == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "research not found"})
+		return
+	}
+	if userID == research.AuthorID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot vote on your own research"})
+		return
+	}
+
 	var req struct {
-		Value int `json:"value"`
+		Type string `json:"type"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -287,16 +305,23 @@ func (h *ResearchHandler) React(c *gin.Context) {
 		return
 	}
 
-	if req.Value != 1 && req.Value != -1 && req.Value != 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "value must be 1, -1, or 0"})
+	var value int
+	switch req.Type {
+	case "up":
+		value = 1
+	case "down":
+		value = -1
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "type must be \"up\" or \"down\""})
 		return
 	}
 
-	if err := h.research.React(c, userID, researchID, req.Value); err != nil {
-		h.logger.Error("failed to react to research", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to react to research"})
+	newValue, err := h.research.ToggleVote(c, userID, researchID, value)
+	if err != nil {
+		h.logger.Error("failed to vote on research", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to record vote"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "reaction recorded"})
+	c.JSON(http.StatusOK, gin.H{"vote": newValue})
 }
