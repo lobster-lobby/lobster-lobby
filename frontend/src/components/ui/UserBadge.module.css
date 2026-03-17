@@ -1,0 +1,21 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ll-space-xs);
+  font-size: 0.875rem;
+}
+
+.icon {
+  font-size: 0.875rem;
+}
+
+.username {
+  color: var(--ll-text);
+  font-weight: 500;
+}
+
+.verified {
+  color: var(--ll-accent);
+  font-weight: 700;
+  font-size: 0.75rem;
+}

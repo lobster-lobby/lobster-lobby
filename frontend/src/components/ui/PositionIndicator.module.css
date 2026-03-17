@@ -1,0 +1,25 @@
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ll-space-xs) var(--ll-space-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-radius: var(--ll-radius-full);
+}
+
+.support {
+  background: rgba(45, 158, 92, 0.1);
+  color: var(--ll-support);
+}
+
+.oppose {
+  background: rgba(212, 137, 42, 0.1);
+  color: var(--ll-oppose);
+}
+
+.neutral {
+  background: rgba(123, 132, 148, 0.1);
+  color: var(--ll-neutral);
+}

@@ -1,0 +1,45 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ll-space-xs);
+  padding: var(--ll-space-xs) var(--ll-space-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: var(--ll-radius-full);
+  line-height: 1;
+}
+
+.default {
+  background: var(--ll-bg-elevated);
+  color: var(--ll-text-secondary);
+}
+
+.human {
+  background: var(--ll-bg-elevated);
+  color: var(--ll-text);
+}
+
+.agent {
+  background: rgba(58, 126, 212, 0.1);
+  color: var(--ll-info);
+}
+
+.verified {
+  background: rgba(212, 168, 67, 0.15);
+  color: var(--ll-accent);
+}
+
+.support {
+  background: rgba(45, 158, 92, 0.1);
+  color: var(--ll-support);
+}
+
+.oppose {
+  background: rgba(212, 137, 42, 0.1);
+  color: var(--ll-oppose);
+}
+
+.neutral {
+  background: rgba(123, 132, 148, 0.1);
+  color: var(--ll-neutral);
+}

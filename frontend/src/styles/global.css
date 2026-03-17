@@ -1,7 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import './variables.css';
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -9,30 +11,36 @@
 
 html {
   font-size: 16px;
+  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  font-family: var(--font-body);
-  color: var(--color-text);
-  background: var(--color-bg);
+  font-family: var(--ll-font);
+  color: var(--ll-text);
+  background: var(--ll-bg);
   line-height: 1.6;
 }
 
+:focus-visible {
+  outline: 2px solid var(--ll-primary);
+  outline-offset: 2px;
+}
+
 a {
-  color: var(--color-lobster);
+  color: var(--ll-primary);
   text-decoration: none;
-  transition: color var(--transition-fast);
+  transition: color 150ms ease;
 }
 
 a:hover {
-  color: var(--color-lobster-dark);
+  color: var(--ll-primary-hover);
 }
 
 button {
   cursor: pointer;
-  font-family: var(--font-body);
+  font-family: var(--ll-font);
   border: none;
   background: none;
 }
@@ -40,15 +48,16 @@ button {
 img {
   max-width: 100%;
   height: auto;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  line-height: 1.2;
-  color: var(--color-navy);
+  display: block;
 }
 
 ::selection {
-  background: var(--color-lobster-light);
+  background: var(--ll-primary-light);
   color: white;
+}
+
+input,
+textarea,
+select {
+  font-family: var(--ll-font);
 }
