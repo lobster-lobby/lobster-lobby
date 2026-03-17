@@ -82,18 +82,23 @@ func (r *SummaryPointRepository) ListByPolicy(ctx context.Context, policyID bson
 }
 
 func (r *SummaryPointRepository) AddEndorsement(ctx context.Context, pointID bson.ObjectID, endorsement models.Endorsement) error {
-	// Remove any existing endorsement from this user first
-	_, _ = r.points.UpdateOne(ctx,
-		bson.M{"_id": pointID},
-		bson.M{"$pull": bson.M{"endorsements": bson.M{"userId": endorsement.UserID}}},
-	)
-
-	// Add the new endorsement
+	// Single atomic pipeline update: filter out any existing endorsement from this user,
+	// then append the new one. This avoids the race condition of separate $pull + $push ops.
 	_, err := r.points.UpdateOne(ctx,
 		bson.M{"_id": pointID},
-		bson.M{
-			"$push": bson.M{"endorsements": endorsement},
-			"$set":  bson.M{"updatedAt": time.Now().UTC()},
+		bson.A{
+			bson.M{"$set": bson.M{
+				"endorsements": bson.M{
+					"$concatArrays": bson.A{
+						bson.M{"$filter": bson.M{
+							"input": "$endorsements",
+							"cond":  bson.M{"$ne": bson.A{"$$this.userId", endorsement.UserID}},
+						}},
+						bson.A{endorsement},
+					},
+				},
+				"updatedAt": time.Now().UTC(),
+			}},
 		},
 	)
 	if err != nil {

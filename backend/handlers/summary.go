@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -203,10 +204,11 @@ func (h *SummaryHandler) EndorsePoint(c *gin.Context) {
 	}
 
 	endorsement := models.Endorsement{
-		UserID:   userID,
-		Position: req.Position,
-		Verified: user.Verified,
-		RepTier:  user.Reputation.Tier,
+		UserID:    userID,
+		Position:  req.Position,
+		Verified:  user.Verified,
+		RepTier:   user.Reputation.Tier,
+		CreatedAt: time.Now().UTC(),
 	}
 
 	if err := h.summary.AddEndorsement(c, pointID, endorsement); err != nil {

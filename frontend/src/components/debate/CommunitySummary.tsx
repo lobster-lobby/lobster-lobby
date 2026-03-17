@@ -6,9 +6,10 @@ import styles from './CommunitySummary.module.css'
 
 interface CommunitySummaryProps {
   policyId: string
+  userPosition?: SummaryPosition
 }
 
-export default function CommunitySummary({ policyId }: CommunitySummaryProps) {
+export default function CommunitySummary({ policyId, userPosition }: CommunitySummaryProps) {
   const { isAuthenticated } = useAuth()
   const [support, setSupport] = useState<SummaryPoint[]>([])
   const [oppose, setOppose] = useState<SummaryPoint[]>([])
@@ -45,14 +46,17 @@ export default function CommunitySummary({ policyId }: CommunitySummaryProps) {
     fetchSummary()
   }, [fetchSummary])
 
-  async function handleEndorse(pointId: string, position: SummaryPosition) {
+  async function handleEndorse(pointId: string) {
     if (!isAuthenticated) return
+    // Send the USER's position (their stance on the policy), not the point's position.
+    // This is what enables cross-position bridging: a support user endorsing an oppose point.
+    const endorserPosition: SummaryPosition = userPosition ?? 'consensus'
     try {
       const token = getAccessToken()
       const res = await fetch(`/api/policies/${policyId}/debate/summary/${pointId}/endorse`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ position }),
+        body: JSON.stringify({ position: endorserPosition }),
       })
       if (res.ok) fetchSummary()
     } catch {
@@ -118,7 +122,7 @@ export default function CommunitySummary({ policyId }: CommunitySummaryProps) {
             ) : (
               <button
                 className={styles.endorseBtn}
-                onClick={() => handleEndorse(point.id, point.position)}
+                onClick={() => handleEndorse(point.id)}
                 type="button"
               >
                 Endorse
@@ -130,7 +134,9 @@ export default function CommunitySummary({ policyId }: CommunitySummaryProps) {
     )
   }
 
-  if (totalPoints === 0 && !showAll) return null
+  // Only return null when we're showing everything and there are genuinely no points.
+  // When showAll=false and totalPoints=0, there may be hidden points — show the toggle.
+  if (totalPoints === 0 && showAll) return null
 
   return (
     <Card>

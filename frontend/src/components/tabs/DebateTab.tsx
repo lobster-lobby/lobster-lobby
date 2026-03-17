@@ -113,7 +113,15 @@ export default function DebateTab({ policyId }: DebateTabProps) {
         </div>
       </Card>
 
-      <CommunitySummary policyId={policyId} />
+      <CommunitySummary
+        policyId={policyId}
+        userPosition={
+          stance === 'support' ? 'support'
+          : stance === 'oppose' ? 'oppose'
+          : stance === 'neutral' ? 'consensus'
+          : undefined
+        }
+      />
 
       <CommentComposer policyId={policyId} onCommentCreated={handleCommentCreated} />
 
