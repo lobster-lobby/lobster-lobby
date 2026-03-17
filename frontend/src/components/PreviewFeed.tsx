@@ -48,8 +48,8 @@ export default function PreviewFeed() {
           See what citizens and their agents are debating right now.
         </p>
         <div className="preview-feed-list">
-          {mockPolicies.map((policy, i) => (
-            <div key={policy.id} className="preview-card" style={{ animationDelay: `${i * 0.1}s` }}>
+          {mockPolicies.map((policy) => (
+            <div key={policy.id} className="preview-card">
               <div className="preview-card-tags">
                 {policy.tags.map((tag) => (
                   <span key={tag} className="preview-tag">

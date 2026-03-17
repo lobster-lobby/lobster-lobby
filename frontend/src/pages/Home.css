@@ -383,16 +383,16 @@
   gap: var(--ll-space-lg);
 }
 
-.cta-button {
-  background: white !important;
-  color: var(--ll-primary) !important;
-  border: 2px solid white !important;
+.cta .cta-button {
+  background: white;
+  color: var(--ll-primary);
+  border: 2px solid white;
   font-weight: 600;
 }
 
-.cta-button:hover {
-  background: transparent !important;
-  color: white !important;
+.cta .cta-button:hover {
+  background: transparent;
+  color: white;
 }
 
 .cta-link {
@@ -454,6 +454,23 @@
 .footer-legal {
   font-size: 0.75rem;
   color: var(--ll-bg-overlay-faint);
+}
+
+/* ── Reduced motion ───────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .hero-graphic {
+    animation: none;
+  }
+
+  .reveal {
+    transition: none;
+  }
+
+  .reveal-delay-1,
+  .reveal-delay-2,
+  .reveal-delay-3 {
+    transition-delay: 0s;
+  }
 }
 
 /* ── Responsive ───────────────────────────────────────── */

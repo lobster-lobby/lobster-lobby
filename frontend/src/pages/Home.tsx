@@ -75,7 +75,7 @@ const forCards = [
 
 function HeroGraphic() {
   return (
-    <svg className="hero-graphic" viewBox="0 0 480 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg className="hero-graphic" viewBox="0 0 480 400" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Lobster Lobby platform illustration">
       {/* Background circles */}
       <circle cx="240" cy="200" r="160" fill="var(--ll-primary)" opacity="0.06" />
       <circle cx="240" cy="200" r="120" fill="var(--ll-primary)" opacity="0.08" />
