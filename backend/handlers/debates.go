@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.uber.org/zap"
 
 	"github.com/lobster-lobby/lobster-lobby/middleware"
@@ -316,4 +317,78 @@ func (h *DebatesHandler) VoteOnArgument(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"vote": newValue})
+}
+
+func (h *DebatesHandler) FlagArgument(c *gin.Context) {
+	slug := c.Param("slug")
+	debate, err := h.debates.GetDebateBySlug(c, slug)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "debate not found"})
+		return
+	}
+
+	argIDStr := c.Param("id")
+	argID, err := bson.ObjectIDFromHex(argIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid argument id"})
+		return
+	}
+
+	userIDStr, _ := c.Get(middleware.ContextUserID)
+	userID, err := bson.ObjectIDFromHex(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	argument, err := h.debates.GetArgumentByID(c, argID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "argument not found"})
+		return
+	}
+	if argument.DebateID != debate.ID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "argument does not belong to this debate"})
+		return
+	}
+
+	var req struct {
+		Reason string `json:"reason"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	validReasons := map[string]bool{"spam": true, "harassment": true, "misinformation": true, "off-topic": true}
+	if !validReasons[req.Reason] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "reason must be one of: spam, harassment, misinformation, off-topic"})
+		return
+	}
+
+	flag := &models.Flag{
+		ArgumentID: argID,
+		DebateID:   debate.ID,
+		UserID:     userID,
+		Reason:     req.Reason,
+	}
+
+	if err := h.debates.CreateFlag(c, flag); err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			c.JSON(http.StatusConflict, gin.H{"error": "you have already flagged this argument"})
+			return
+		}
+		h.logger.Error("failed to create flag", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create flag"})
+		return
+	}
+
+	// Check flag count and auto-flag at threshold
+	count, err := h.debates.GetFlagCount(c, argID)
+	if err == nil && count >= 3 {
+		_ = h.debates.UpdateArgumentFlagged(c, argID, true, int(count))
+	} else if err == nil {
+		_ = h.debates.UpdateArgumentFlagged(c, argID, argument.Flagged, int(count))
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"flag": flag})
 }

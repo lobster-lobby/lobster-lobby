@@ -80,3 +80,70 @@
   font-weight: 600;
   color: var(--ll-text-secondary);
 }
+
+.flagged {
+  border-color: var(--ll-danger, #dc2626);
+  background: color-mix(in srgb, var(--ll-danger, #dc2626) 5%, transparent);
+}
+
+.flagBadge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ll-danger, #dc2626);
+  background: color-mix(in srgb, var(--ll-danger, #dc2626) 10%, transparent);
+  padding: 1px 6px;
+  border-radius: var(--ll-radius-sm);
+}
+
+.flagWrapper {
+  position: relative;
+  margin-left: auto;
+}
+
+.flagBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 2px 4px;
+  border-radius: var(--ll-radius-sm);
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.flagBtn:hover {
+  opacity: 1;
+}
+
+.flagBtnActive {
+  opacity: 1;
+}
+
+.flagMenu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background: var(--ll-bg-elevated, #fff);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-sm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+  min-width: 140px;
+  padding: 4px 0;
+}
+
+.flagMenuItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: var(--ll-text);
+}
+
+.flagMenuItem:hover {
+  background: var(--ll-bg-hover, #f3f4f6);
+}

@@ -16,6 +16,7 @@ type DebateRepository struct {
 	debates   *mongo.Collection
 	arguments *mongo.Collection
 	votes     *mongo.Collection
+	flags     *mongo.Collection
 	users     *mongo.Collection
 }
 
@@ -24,6 +25,7 @@ func NewDebateRepository(db *MongoDB) *DebateRepository {
 		debates:   db.Database.Collection("debates"),
 		arguments: db.Database.Collection("debate_arguments"),
 		votes:     db.Database.Collection("debate_votes"),
+		flags:     db.Database.Collection("debate_flags"),
 		users:     db.Database.Collection("users"),
 	}
 }
@@ -49,6 +51,17 @@ func (r *DebateRepository) EnsureIndexes(ctx context.Context) error {
 	}
 
 	_, err = r.votes.Indexes().CreateMany(ctx, []mongo.IndexModel{
+		{
+			Keys:    bson.D{{Key: "userId", Value: 1}, {Key: "argumentId", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		{Keys: bson.D{{Key: "argumentId", Value: 1}}},
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = r.flags.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{
 			Keys:    bson.D{{Key: "userId", Value: 1}, {Key: "argumentId", Value: 1}},
 			Options: options.Index().SetUnique(true),
@@ -384,4 +397,98 @@ func ControversyScore(upvotes, downvotes int) float64 {
 	}
 	absScore := math.Abs(float64(upvotes - downvotes))
 	return total / (1 + absScore)
+}
+
+// CreateFlag inserts a flag for an argument. Returns mongo.ErrNoDocuments-style
+// duplicate key error if the user already flagged this argument.
+func (r *DebateRepository) CreateFlag(ctx context.Context, flag *models.Flag) error {
+	if flag.ID.IsZero() {
+		flag.ID = bson.NewObjectID()
+	}
+	flag.CreatedAt = time.Now().UTC()
+	_, err := r.flags.InsertOne(ctx, flag)
+	return err
+}
+
+// GetFlagCount returns the number of flags for an argument.
+func (r *DebateRepository) GetFlagCount(ctx context.Context, argumentID bson.ObjectID) (int64, error) {
+	return r.flags.CountDocuments(ctx, bson.M{"argumentId": argumentID})
+}
+
+// UpdateArgumentFlagged sets the flagged status and flag count on an argument.
+func (r *DebateRepository) UpdateArgumentFlagged(ctx context.Context, argumentID bson.ObjectID, flagged bool, flagCount int) error {
+	_, err := r.arguments.UpdateOne(ctx,
+		bson.M{"_id": argumentID},
+		bson.M{"$set": bson.M{"flagged": flagged, "flagCount": flagCount}},
+	)
+	return err
+}
+
+// GetFlaggedArguments returns all arguments where flagged=true, enriched with author and debate info.
+func (r *DebateRepository) GetFlaggedArguments(ctx context.Context) ([]models.FlaggedArgumentDetail, error) {
+	cursor, err := r.arguments.Find(ctx, bson.M{"flagged": true},
+		options.Find().SetSort(bson.D{{Key: "flagCount", Value: -1}}),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var args []models.Argument
+	if err := cursor.All(ctx, &args); err != nil {
+		return nil, err
+	}
+
+	results := make([]models.FlaggedArgumentDetail, len(args))
+	for i, a := range args {
+		results[i] = models.FlaggedArgumentDetail{Argument: a}
+
+		// Enrich author username
+		var user models.User
+		if err := r.users.FindOne(ctx, bson.M{"_id": a.AuthorID}).Decode(&user); err == nil {
+			results[i].AuthorUsername = user.Username
+		}
+
+		// Enrich debate info
+		var debate models.Debate
+		if err := r.debates.FindOne(ctx, bson.M{"_id": a.DebateID}).Decode(&debate); err == nil {
+			results[i].DebateSlug = debate.Slug
+			results[i].DebateTitle = debate.Title
+		}
+	}
+
+	return results, nil
+}
+
+// UnflagArgument clears flagged status, resets flag count, and removes all flags.
+func (r *DebateRepository) UnflagArgument(ctx context.Context, argumentID bson.ObjectID) error {
+	_, err := r.arguments.UpdateOne(ctx,
+		bson.M{"_id": argumentID},
+		bson.M{"$set": bson.M{"flagged": false, "flagCount": 0}},
+	)
+	if err != nil {
+		return err
+	}
+	_, err = r.flags.DeleteMany(ctx, bson.M{"argumentId": argumentID})
+	return err
+}
+
+// DeleteArgument hard-deletes an argument and its associated flags and votes.
+func (r *DebateRepository) DeleteArgument(ctx context.Context, argumentID bson.ObjectID) error {
+	_, err := r.arguments.DeleteOne(ctx, bson.M{"_id": argumentID})
+	if err != nil {
+		return err
+	}
+	_, _ = r.flags.DeleteMany(ctx, bson.M{"argumentId": argumentID})
+	_, _ = r.votes.DeleteMany(ctx, bson.M{"argumentId": argumentID})
+	return nil
+}
+
+// BanUser sets the banned field to true on a user.
+func (r *DebateRepository) BanUser(ctx context.Context, userID bson.ObjectID) error {
+	_, err := r.users.UpdateOne(ctx,
+		bson.M{"_id": userID},
+		bson.M{"$set": bson.M{"banned": true, "updatedAt": time.Now().UTC()}},
+	)
+	return err
 }

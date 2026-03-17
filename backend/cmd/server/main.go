@@ -161,6 +161,7 @@ func main() {
 		logger.Warn("failed to ensure debate indexes", zap.Error(err))
 	}
 	debatesHandler := handlers.NewDebatesHandler(debateRepo, logger, reputationSvc)
+	moderationHandler := handlers.NewModerationHandler(debateRepo, userRepo, logger)
 
 	rateLimiter := middleware.NewRateLimiter()
 
@@ -270,6 +271,15 @@ func main() {
 			debates.GET("/:slug", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), debatesHandler.GetDebate)
 			debates.POST("/:slug/arguments", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debatesHandler.CreateArgument)
 			debates.POST("/:slug/arguments/:id/vote", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debatesHandler.VoteOnArgument)
+			debates.POST("/:slug/arguments/:id/flag", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debatesHandler.FlagArgument)
+		}
+
+		// Admin moderation
+		admin := api.Group("/admin")
+		admin.Use(middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc))
+		{
+			admin.GET("/moderation/queue", moderationHandler.GetQueue)
+			admin.POST("/moderation/:id/action", moderationHandler.TakeAction)
 		}
 
 		api.GET("/search", searchHandler.Search)
