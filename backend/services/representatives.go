@@ -42,16 +42,28 @@ type civicChannel struct {
 }
 
 type RepresentativeService struct {
-	repo      *repository.RepresentativeRepository
-	apiKey    string
-	client    *http.Client
+	repo    *repository.RepresentativeRepository
+	apiKey  string
+	client  *http.Client
+	baseURL string
 }
 
 func NewRepresentativeService(repo *repository.RepresentativeRepository, apiKey string) *RepresentativeService {
 	return &RepresentativeService{
-		repo:   repo,
-		apiKey: apiKey,
-		client: &http.Client{Timeout: 10 * time.Second},
+		repo:    repo,
+		apiKey:  apiKey,
+		client:  &http.Client{Timeout: 10 * time.Second},
+		baseURL: "https://civicinfo.googleapis.com/civicinfo/v2",
+	}
+}
+
+// NewRepresentativeServiceWithBaseURL creates a service with a custom base URL (for testing).
+func NewRepresentativeServiceWithBaseURL(repo *repository.RepresentativeRepository, apiKey, baseURL string) *RepresentativeService {
+	return &RepresentativeService{
+		repo:    repo,
+		apiKey:  apiKey,
+		client:  &http.Client{Timeout: 10 * time.Second},
+		baseURL: baseURL,
 	}
 }
 
@@ -64,7 +76,8 @@ func (s *RepresentativeService) LookupByAddress(ctx context.Context, address str
 	}
 
 	apiURL := fmt.Sprintf(
-		"https://civicinfo.googleapis.com/civicinfo/v2/representatives?address=%s&key=%s",
+		"%s/representatives?address=%s&key=%s",
+		s.baseURL,
 		url.QueryEscape(address),
 		s.apiKey,
 	)

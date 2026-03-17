@@ -8,6 +8,7 @@ export default function Representatives() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasSearched, setHasSearched] = useState(false)
+  const [photoErrors, setPhotoErrors] = useState<Record<string, boolean>>({})
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -128,23 +129,18 @@ export default function Representatives() {
           {officials.map((official, idx) => (
             <article key={`${official.name}-${idx}`} className={styles.officialCard}>
               <div className={styles.officialHeader}>
-                {official.photoUrl ? (
+                {official.photoUrl && !photoErrors[`${official.name}-${idx}`] ? (
                   <img
                     src={official.photoUrl}
                     alt={official.name}
                     className={styles.officialPhoto}
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none'
-                      e.currentTarget.nextElementSibling?.classList.remove(styles.hidden)
-                    }}
+                    onError={() => setPhotoErrors(prev => ({ ...prev, [`${official.name}-${idx}`]: true }))}
                   />
-                ) : null}
-                <div
-                  className={styles.officialAvatar}
-                  style={official.photoUrl ? { display: 'none' } : undefined}
-                >
-                  {official.name.charAt(0)}
-                </div>
+                ) : (
+                  <div className={styles.officialAvatar}>
+                    {official.name.charAt(0)}
+                  </div>
+                )}
                 <div className={styles.officialInfo}>
                   <h3 className={styles.officialName}>{official.name}</h3>
                   <p className={styles.officialTitle}>{official.title}</p>

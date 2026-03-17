@@ -4,8 +4,8 @@ import styles from './BottomNav.module.css'
 const navItems = [
   { to: '/', label: 'Home', icon: '🏠' },
   { to: '/search', label: 'Search', icon: '🔍' },
+  { to: '/policies/new', label: 'Create', icon: '✏️' },
   { to: '/representatives', label: 'Reps', icon: '🏛️' },
-  { to: '/bookmarks', label: 'Bookmarks', icon: '🔖' },
   { to: '/dashboard', label: 'Profile', icon: '👤' },
 ]
 
