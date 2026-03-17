@@ -107,6 +107,12 @@ func main() {
 	}
 	researchHandler := handlers.NewResearchHandler(researchRepo, policyRepo, logger)
 
+	summaryRepo := repository.NewSummaryPointRepository(mongo)
+	if err := summaryRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("summary indexes", zap.Error(err))
+	}
+	summaryHandler := handlers.NewSummaryHandler(summaryRepo, commentRepo, policyRepo, userRepo, logger, reputationSvc)
+
 	rateLimiter := middleware.NewRateLimiter()
 
 	if cfg.Env != "development" {
@@ -151,6 +157,12 @@ func main() {
 			policies.POST("/:id/debate/:commentId/react", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.ReactToComment)
 			policies.POST("/:id/stance", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.SetStance)
 			policies.GET("/:id/stance", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.GetStance)
+
+			// Summary / bridging routes
+			policies.GET("/:id/debate/summary", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), summaryHandler.ListSummary)
+			policies.POST("/:id/debate/summary", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), summaryHandler.CreatePoint)
+			policies.POST("/:id/debate/summary/:pointId/endorse", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), summaryHandler.EndorsePoint)
+			policies.DELETE("/:id/debate/summary/:pointId/endorse", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), summaryHandler.RemoveEndorsement)
 
 			// Research routes
 			policies.POST("/:id/research", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), researchHandler.Create)
