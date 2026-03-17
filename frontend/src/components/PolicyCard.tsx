@@ -77,6 +77,9 @@ export function PolicyCard({ policy, onTagClick }: PolicyCardProps) {
           {policy.billNumber && (
             <span className={styles.billNumber}>{policy.billNumber}</span>
           )}
+          {policy.status === 'ready_for_campaign' && (
+            <Badge variant="success">Ready for Campaign</Badge>
+          )}
         </div>
         <time className={styles.time} dateTime={policy.createdAt}>
           {relativeTime(policy.createdAt)}

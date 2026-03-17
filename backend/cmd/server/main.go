@@ -112,11 +112,18 @@ func main() {
 	}
 	researchHandler := handlers.NewResearchHandler(researchRepo, policyRepo, logger)
 
+	nominationRepo := repository.NewNominationRepository(mongo)
+	if err := nominationRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("nomination indexes", zap.Error(err))
+	}
+
 	summaryRepo := repository.NewSummaryPointRepository(mongo)
 	if err := summaryRepo.EnsureIndexes(bgCtx); err != nil {
 		logger.Warn("summary indexes", zap.Error(err))
 	}
 	summaryHandler := handlers.NewSummaryHandler(summaryRepo, commentRepo, policyRepo, userRepo, logger, reputationSvc)
+
+	nominationHandler := handlers.NewNominationHandler(nominationRepo, policyRepo, userRepo, logger)
 
 	rateLimiter := middleware.NewRateLimiter()
 
@@ -169,6 +176,11 @@ func main() {
 			policies.POST("/:id/debate/summary", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), summaryHandler.CreatePoint)
 			policies.POST("/:id/debate/summary/:pointId/endorse", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), summaryHandler.EndorsePoint)
 			policies.DELETE("/:id/debate/summary/:pointId/endorse", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), summaryHandler.RemoveEndorsement)
+
+			// Nomination / campaign-readiness routes
+			policies.POST("/:id/nominate-for-campaign", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), nominationHandler.Nominate)
+			policies.POST("/:id/nominate-for-campaign/endorse", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), nominationHandler.Endorse)
+			policies.GET("/:id/campaign-readiness", nominationHandler.CampaignReadiness)
 
 			// Research routes
 			policies.POST("/:id/research", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), researchHandler.Create)

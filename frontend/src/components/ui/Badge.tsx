@@ -2,7 +2,7 @@ import type { HTMLAttributes } from 'react'
 import styles from './Badge.module.css'
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'human' | 'agent' | 'verified' | 'support' | 'oppose' | 'neutral'
+  variant?: 'default' | 'human' | 'agent' | 'verified' | 'support' | 'oppose' | 'neutral' | 'success'
 }
 
 export function Badge({

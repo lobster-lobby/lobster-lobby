@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense, lazy } from 'react'
+import { useState, useEffect, useCallback, Suspense, lazy } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { TabNav, Button, Badge, UserBadge, Toast, Spinner, Card, Skeleton } from '../components/ui'
 import type { Policy } from '../components/PolicyCard'
@@ -63,6 +63,31 @@ export default function PolicyDetail() {
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [bookmarkLoading, setBookmarkLoading] = useState(false)
   const [toast, setToast] = useState<{ message: string; variant: 'success' | 'error' | 'info' } | null>(null)
+  const [readiness, setReadiness] = useState<{
+    eligible: boolean
+    isReady: boolean
+    debateCount: number
+    debateRequired: number
+    researchCount: number
+    researchRequired: number
+    endorsementCount: number
+    endorsementsRequired: number
+    nominationStatus: string
+    missing: string[]
+  } | null>(null)
+  const [nominateLoading, setNominateLoading] = useState(false)
+
+  const fetchReadiness = useCallback(async (policyId: string) => {
+    try {
+      const res = await fetch(`/api/policies/${policyId}/campaign-readiness`)
+      if (res.ok) {
+        const data = await res.json()
+        setReadiness(data)
+      }
+    } catch {
+      // Non-critical, fail silently
+    }
+  }, [])
 
   const VALID_TABS = TABS.map((t) => t.id)
   const tabParam = searchParams.get('tab')
@@ -96,6 +121,7 @@ export default function PolicyDetail() {
         const data = await res.json()
         setPolicy(data.policy)
         setIsBookmarked(data.policy.isBookmarked ?? data.isBookmarked ?? false)
+        fetchReadiness(data.policy.id)
         document.title = `${data.policy.title} | Lobster Lobby`
 
         // SEO meta tags
@@ -127,7 +153,7 @@ export default function PolicyDetail() {
     return () => {
       document.title = 'Lobster Lobby'
     }
-  }, [slug])
+  }, [slug, fetchReadiness])
 
   const handleTabChange = (tabId: string) => {
     if (tabId === 'debate') {
@@ -188,6 +214,58 @@ export default function PolicyDetail() {
         setToast({ message: 'Failed to copy link', variant: 'error' })
       }
     )
+  }
+
+  const handleNominate = async () => {
+    if (!isAuthenticated) {
+      setToast({ message: 'Please log in to nominate policies', variant: 'info' })
+      return
+    }
+    if (!policy) return
+    setNominateLoading(true)
+    try {
+      const token = getAccessToken()
+      const res = await fetch(`/api/policies/${policy.id}/nominate-for-campaign`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to nominate')
+      }
+      setToast({ message: 'Policy nominated for campaign!', variant: 'success' })
+      fetchReadiness(policy.id)
+    } catch (err) {
+      setToast({ message: err instanceof Error ? err.message : 'Failed to nominate', variant: 'error' })
+    } finally {
+      setNominateLoading(false)
+    }
+  }
+
+  const handleEndorse = async () => {
+    if (!isAuthenticated) {
+      setToast({ message: 'Please log in to endorse nominations', variant: 'info' })
+      return
+    }
+    if (!policy) return
+    setNominateLoading(true)
+    try {
+      const token = getAccessToken()
+      const res = await fetch(`/api/policies/${policy.id}/nominate-for-campaign/endorse`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to endorse')
+      }
+      setToast({ message: 'Endorsement added!', variant: 'success' })
+      fetchReadiness(policy.id)
+    } catch (err) {
+      setToast({ message: err instanceof Error ? err.message : 'Failed to endorse', variant: 'error' })
+    } finally {
+      setNominateLoading(false)
+    }
   }
 
   const renderTabContent = () => {
@@ -273,6 +351,9 @@ export default function PolicyDetail() {
             ) : null}
             {policy.billNumber && (
               <span className={styles.billNumber}>{policy.billNumber}</span>
+            )}
+            {policy.status === 'ready_for_campaign' && (
+              <Badge variant="success">Ready for Campaign</Badge>
             )}
           </div>
 
@@ -385,6 +466,74 @@ export default function PolicyDetail() {
             </div>
           </div>
         </Card>
+
+        {readiness && (
+          <Card header={<h3>Campaign Readiness</h3>}>
+            <div className={styles.readinessSection}>
+              {readiness.isReady ? (
+                <Badge variant="success">Ready for Campaign</Badge>
+              ) : (
+                <>
+                  <div className={styles.readinessItem}>
+                    <span className={styles.readinessLabel}>Debates</span>
+                    <span className={styles.readinessValue}>
+                      {readiness.debateCount}/{readiness.debateRequired}
+                    </span>
+                    <div className={styles.progressBar}>
+                      <div
+                        className={styles.progressFill}
+                        style={{ width: `${Math.min(100, (readiness.debateCount / readiness.debateRequired) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.readinessItem}>
+                    <span className={styles.readinessLabel}>Research</span>
+                    <span className={styles.readinessValue}>
+                      {readiness.researchCount}/{readiness.researchRequired}
+                    </span>
+                    <div className={styles.progressBar}>
+                      <div
+                        className={styles.progressFill}
+                        style={{ width: `${Math.min(100, (readiness.researchCount / readiness.researchRequired) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.readinessItem}>
+                    <span className={styles.readinessLabel}>Endorsements</span>
+                    <span className={styles.readinessValue}>
+                      {readiness.endorsementCount}/{readiness.endorsementsRequired}
+                    </span>
+                    <div className={styles.progressBar}>
+                      <div
+                        className={styles.progressFill}
+                        style={{ width: `${Math.min(100, (readiness.endorsementCount / readiness.endorsementsRequired) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  {readiness.eligible && !readiness.nominationStatus && (
+                    <Button
+                      size="sm"
+                      onClick={handleNominate}
+                      disabled={nominateLoading}
+                    >
+                      Nominate for Campaign
+                    </Button>
+                  )}
+                  {readiness.nominationStatus === 'pending' && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleEndorse}
+                      disabled={nominateLoading}
+                    >
+                      Endorse Nomination
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+          </Card>
+        )}
 
         <Card header={<h3>Related Policies</h3>}>
           <p className={styles.comingSoon}>Coming soon</p>

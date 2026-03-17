@@ -43,3 +43,8 @@
   background: var(--ll-neutral-tint);
   color: var(--ll-neutral);
 }
+
+.success {
+  background: var(--ll-support-tint, #e6f9e6);
+  color: var(--ll-support, #2e7d32);
+}
