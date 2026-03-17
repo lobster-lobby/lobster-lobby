@@ -1,0 +1,123 @@
+.wrapper {
+  background: var(--ll-bg-card);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-md);
+  padding: var(--ll-space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-sm);
+}
+
+.loginPrompt {
+  margin: 0;
+  text-align: center;
+  color: var(--ll-text-secondary);
+  font-size: 0.875rem;
+  padding: var(--ll-space-sm) 0;
+}
+
+.positionSelector {
+  display: flex;
+  gap: var(--ll-space-xs);
+}
+
+.positionBtn {
+  flex: 1;
+  padding: var(--ll-space-xs) var(--ll-space-sm);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-sm);
+  background: var(--ll-bg);
+  color: var(--ll-text-secondary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.positionBtn:hover {
+  border-color: var(--ll-text-muted);
+}
+
+.positionBtn.support.active {
+  background: var(--ll-support-tint);
+  border-color: var(--ll-support);
+  color: var(--ll-support);
+}
+
+.positionBtn.oppose.active {
+  background: var(--ll-oppose-tint);
+  border-color: var(--ll-oppose);
+  color: var(--ll-oppose);
+}
+
+.positionBtn.neutral.active {
+  background: var(--ll-neutral-tint);
+  border-color: var(--ll-neutral);
+  color: var(--ll-neutral);
+}
+
+.editorArea {
+  display: flex;
+  flex-direction: column;
+}
+
+.editorTabs {
+  display: flex;
+  gap: var(--ll-space-xs);
+  margin-bottom: var(--ll-space-xs);
+}
+
+.tab {
+  padding: var(--ll-space-xs) var(--ll-space-sm);
+  border: none;
+  background: none;
+  color: var(--ll-text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.activeTab {
+  color: var(--ll-text);
+  border-bottom-color: var(--ll-primary);
+}
+
+.textarea {
+  width: 100%;
+  padding: var(--ll-space-sm);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-sm);
+  background: var(--ll-bg);
+  color: var(--ll-text);
+  font-family: var(--ll-font);
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--ll-primary);
+}
+
+.preview {
+  padding: var(--ll-space-sm);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-sm);
+  background: var(--ll-bg);
+  color: var(--ll-text);
+  font-size: 0.875rem;
+  min-height: 80px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.error {
+  margin: 0;
+  color: var(--ll-error);
+  font-size: 0.8125rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
