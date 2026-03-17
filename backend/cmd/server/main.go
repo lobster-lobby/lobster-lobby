@@ -125,6 +125,14 @@ func main() {
 
 	nominationHandler := handlers.NewNominationHandler(nominationRepo, policyRepo, userRepo, logger)
 
+	// Representative lookup
+	repRepo := repository.NewRepresentativeRepository(mongo)
+	if err := repRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure representative indexes", zap.Error(err))
+	}
+	repSvc := services.NewRepresentativeService(repRepo, cfg.GoogleCivicAPIKey)
+	repHandler := handlers.NewRepresentativeHandler(repSvc)
+
 	rateLimiter := middleware.NewRateLimiter()
 
 	if cfg.Env != "development" {
@@ -203,6 +211,10 @@ func main() {
 		api.GET("/search", searchHandler.Search)
 		api.GET("/bookmarks", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.BookmarkList)
 		api.GET("/dashboard", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.Dashboard)
+
+		// Representative lookup routes (no auth required for reads)
+		api.GET("/representatives", repHandler.List)
+		api.GET("/representatives/:id", repHandler.GetByID)
 
 		keys := api.Group("/keys")
 		keys.Use(middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc))
