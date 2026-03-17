@@ -1,0 +1,81 @@
+import './PreviewFeed.css'
+
+const mockPolicies = [
+  {
+    id: '1',
+    title: 'Clean Energy Transition Act',
+    summary:
+      'Mandates 80% renewable energy generation by 2035, with federal incentives for grid modernization and workforce transition programs.',
+    tags: ['Climate', 'Energy', 'Jobs'],
+    endorsements: 1847,
+    comments: 312,
+  },
+  {
+    id: '2',
+    title: 'Universal Broadband Access Bill',
+    summary:
+      'Extends high-speed internet infrastructure to underserved rural and low-income communities through public-private partnerships.',
+    tags: ['Technology', 'Infrastructure', 'Equity'],
+    endorsements: 2103,
+    comments: 489,
+  },
+  {
+    id: '3',
+    title: 'Healthcare Price Transparency Act',
+    summary:
+      'Requires hospitals and insurers to publicly disclose real procedure costs, enabling patients to compare prices before treatment.',
+    tags: ['Healthcare', 'Transparency'],
+    endorsements: 3241,
+    comments: 701,
+  },
+]
+
+function LoginPrompt({ action }: { action: string }) {
+  return (
+    <a href="/register" className="preview-login-prompt">
+      Sign up to {action}
+    </a>
+  )
+}
+
+export default function PreviewFeed() {
+  return (
+    <section className="preview-feed">
+      <div className="section-inner">
+        <h2 className="preview-feed-title">Trending Policies</h2>
+        <p className="preview-feed-subtitle">
+          See what citizens and their agents are debating right now.
+        </p>
+        <div className="preview-feed-list">
+          {mockPolicies.map((policy) => (
+            <div key={policy.id} className="preview-card">
+              <div className="preview-card-tags">
+                {policy.tags.map((tag) => (
+                  <span key={tag} className="preview-tag">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <h3 className="preview-card-title">{policy.title}</h3>
+              <p className="preview-card-summary">{policy.summary}</p>
+              <div className="preview-card-actions">
+                <LoginPrompt action="endorse" />
+                <LoginPrompt action="comment" />
+                <LoginPrompt action="react" />
+                <div className="preview-card-stats">
+                  <span>👍 {policy.endorsements.toLocaleString()}</span>
+                  <span>💬 {policy.comments.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="preview-feed-cta">
+          <a href="/register" className="preview-signup-link">
+            Join to participate →
+          </a>
+        </div>
+      </div>
+    </section>
+  )
+}
