@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, Suspense, lazy } from 'react'
+import { CrossReferences } from '../components/CrossReferences'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { TabNav, Button, Badge, UserBadge, Toast, Spinner, Card, Skeleton } from '../components/ui'
 import type { Policy } from '../components/PolicyCard'
@@ -519,8 +520,8 @@ export default function PolicyDetail() {
           </Card>
         )}
 
-        <Card header={<h3>Related Policies</h3>}>
-          <p className={styles.comingSoon}>Coming soon</p>
+        <Card header={<h3>Related</h3>}>
+          {policy && <CrossReferences entityType="policy" entityId={policy.id} />}
         </Card>
 
         <Card header={<h3>Top Contributors</h3>}>

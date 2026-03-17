@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { CrossReferences } from '../CrossReferences'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { VoteButtons, UserBadge } from '../ui'
@@ -121,6 +122,8 @@ export function ResearchCard({ research, onVote }: ResearchCardProps) {
               ))}
             </div>
           </div>
+
+          <CrossReferences entityType="research" entityId={research.id} />
         </div>
       )}
     </div>
