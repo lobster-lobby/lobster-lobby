@@ -344,6 +344,73 @@ func (r *CommentRepository) getSortDoc(sort string) bson.D {
 	}
 }
 
+// FindByPolicyControversial returns top-level comments sorted by controversy score.
+// Controversial = high engagement + close ratio: totalVotes / (1 + |upvotes - downvotes|).
+func (r *CommentRepository) FindByPolicyControversial(ctx context.Context, policyID bson.ObjectID, position string, page, perPage int) ([]models.CommentResponse, int64, map[string]int, error) {
+	if page < 1 {
+		page = 1
+	}
+	if perPage < 1 || perPage > 100 {
+		perPage = 20
+	}
+
+	filter := bson.M{"policyId": policyID, "parentId": nil}
+	if position != "" && position != "all" {
+		filter["position"] = position
+	}
+
+	total, err := r.comments.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	pipeline := bson.A{
+		bson.M{"$match": filter},
+		bson.M{"$addFields": bson.M{
+			"totalVotes": bson.M{"$add": bson.A{"$upvotes", "$downvotes"}},
+			"absScore":   bson.M{"$abs": bson.M{"$subtract": bson.A{"$upvotes", "$downvotes"}}},
+		}},
+		bson.M{"$addFields": bson.M{
+			"controversyScore": bson.M{
+				"$cond": bson.M{
+					"if":   bson.M{"$eq": bson.A{"$totalVotes", 0}},
+					"then": 0,
+					"else": bson.M{
+						"$divide": bson.A{
+							"$totalVotes",
+							bson.M{"$add": bson.A{1, "$absScore"}},
+						},
+					},
+				},
+			},
+		}},
+		bson.M{"$sort": bson.D{{Key: "controversyScore", Value: -1}, {Key: "totalVotes", Value: -1}}},
+		bson.M{"$skip": int64((page - 1) * perPage)},
+		bson.M{"$limit": int64(perPage)},
+	}
+
+	cursor, err := r.comments.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var comments []models.Comment
+	if err := cursor.All(ctx, &comments); err != nil {
+		return nil, 0, nil, err
+	}
+
+	responses := make([]models.CommentResponse, len(comments))
+	for i, c := range comments {
+		responses[i] = models.CommentResponse{Comment: c}
+		r.enrichComment(ctx, &responses[i])
+	}
+
+	positions := r.countPositions(ctx, policyID)
+
+	return responses, total, positions, nil
+}
+
 // WilsonScore calculates the lower bound of Wilson score confidence interval.
 // Used for "best" comment sorting with recency decay.
 func WilsonScore(upvotes, downvotes int, createdAt time.Time) float64 {

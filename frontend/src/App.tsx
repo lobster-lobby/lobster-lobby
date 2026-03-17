@@ -15,6 +15,8 @@ import CampaignDetail from './pages/CampaignDetail'
 import Dashboard from './pages/Dashboard'
 import Settings from './pages/Settings'
 import UserProfile from './pages/UserProfile'
+import Debates from './pages/Debates'
+import DebateDetail from './pages/DebateDetail'
 import NotFound from './pages/NotFound'
 import './styles/global.css'
 
@@ -47,6 +49,8 @@ export default function App() {
               }
             />
             <Route path="/representatives" element={<Representatives />} />
+            <Route path="/debates" element={<Debates />} />
+            <Route path="/debates/:slug" element={<DebateDetail />} />
             <Route path="/campaigns/:slug" element={<CampaignDetail />} />
             <Route
               path="/dashboard"

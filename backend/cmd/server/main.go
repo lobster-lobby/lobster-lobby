@@ -155,6 +155,13 @@ func main() {
 
 	assetHandler := handlers.NewAssetHandler(assetRepo, campaignRepo, userRepo, campaignEventRepo, logger)
 
+	// Debates (standalone)
+	debateRepo := repository.NewDebateRepository(mongo)
+	if err := debateRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure debate indexes", zap.Error(err))
+	}
+	debatesHandler := handlers.NewDebatesHandler(debateRepo, logger, reputationSvc)
+
 	rateLimiter := middleware.NewRateLimiter()
 
 	if cfg.Env != "development" {
@@ -252,6 +259,17 @@ func main() {
 			// Campaign events (timeline) and metrics
 			campaigns.GET("/:id/events", campaignEventHandler.List)
 			campaigns.GET("/:id/metrics/activity", campaignEventHandler.GetActivity)
+		}
+
+		// Standalone debates
+		debates := api.Group("/debates")
+		debates.Use(middleware.RateLimit(rateLimiter))
+		{
+			debates.POST("", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debatesHandler.CreateDebate)
+			debates.GET("", debatesHandler.ListDebates)
+			debates.GET("/:slug", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), debatesHandler.GetDebate)
+			debates.POST("/:slug/arguments", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debatesHandler.CreateArgument)
+			debates.POST("/:slug/arguments/:id/vote", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debatesHandler.VoteOnArgument)
 		}
 
 		api.GET("/search", searchHandler.Search)
