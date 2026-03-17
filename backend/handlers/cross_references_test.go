@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -266,13 +265,16 @@ func TestList_InvalidType_Returns400(t *testing.T) {
 // ── Tests: Delete ─────────────────────────────────────────────────────────────
 
 func TestDelete_Success_Returns200(t *testing.T) {
-	store := &mockCrossRefStore{}
+	userID := bson.NewObjectID()
+	refID := bson.NewObjectID()
+	store := &mockCrossRefStore{
+		ref: &models.CrossReference{ID: refID, CreatedBy: userID},
+	}
 	h := newTestCrossRefHandler(store)
 
-	refID := bson.NewObjectID()
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	c.Set(middleware.ContextUserID, bson.NewObjectID().Hex())
+	c.Set(middleware.ContextUserID, userID.Hex())
 	c.Params = gin.Params{{Key: "id", Value: refID.Hex()}}
 	c.Request = httptest.NewRequest(http.MethodDelete, "/api/cross-references/"+refID.Hex(), nil)
 	h.Delete(c)
@@ -289,7 +291,8 @@ func TestDelete_Success_Returns200(t *testing.T) {
 }
 
 func TestDelete_NotFound_Returns404(t *testing.T) {
-	store := &mockCrossRefStore{deleteErr: errors.New("not found")}
+	// ref is nil → GetByID returns nil → 404 before Delete is called
+	store := &mockCrossRefStore{ref: nil}
 	h := newTestCrossRefHandler(store)
 
 	refID := bson.NewObjectID()
@@ -302,6 +305,30 @@ func TestDelete_NotFound_Returns404(t *testing.T) {
 
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("expected 404, got %d", w.Code)
+	}
+}
+
+func TestDelete_NotOwner_Returns403(t *testing.T) {
+	ownerID := bson.NewObjectID()
+	otherUserID := bson.NewObjectID()
+	refID := bson.NewObjectID()
+	store := &mockCrossRefStore{
+		ref: &models.CrossReference{ID: refID, CreatedBy: ownerID},
+	}
+	h := newTestCrossRefHandler(store)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Set(middleware.ContextUserID, otherUserID.Hex())
+	c.Params = gin.Params{{Key: "id", Value: refID.Hex()}}
+	c.Request = httptest.NewRequest(http.MethodDelete, "/api/cross-references/"+refID.Hex(), nil)
+	h.Delete(c)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d: %s", w.Code, w.Body.String())
+	}
+	if store.deleteCalled {
+		t.Error("Delete should not be called for non-owner")
 	}
 }
 

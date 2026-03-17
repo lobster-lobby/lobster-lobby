@@ -134,6 +134,13 @@ func (h *CrossReferenceHandler) List(c *gin.Context) {
 
 // Delete handles DELETE /api/cross-references/:id
 func (h *CrossReferenceHandler) Delete(c *gin.Context) {
+	userIDStr, _ := c.Get(middleware.ContextUserID)
+	userID, err := bson.ObjectIDFromHex(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})
+		return
+	}
+
 	idStr := c.Param("id")
 	id, err := bson.ObjectIDFromHex(idStr)
 	if err != nil {
@@ -141,10 +148,20 @@ func (h *CrossReferenceHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	err = h.refs.Delete(c, id)
-	if err != nil {
-		h.logger.Error("failed to delete cross-reference", zap.Error(err))
+	ref, err := h.refs.GetByID(c, id)
+	if err != nil || ref == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "cross-reference not found"})
+		return
+	}
+
+	if ref.CreatedBy != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized to delete this cross-reference"})
+		return
+	}
+
+	if err = h.refs.Delete(c, id); err != nil {
+		h.logger.Error("failed to delete cross-reference", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete cross-reference"})
 		return
 	}
 

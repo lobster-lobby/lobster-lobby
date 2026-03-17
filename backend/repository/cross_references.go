@@ -50,7 +50,21 @@ func (r *CrossReferenceRepository) Create(ctx context.Context, ref *models.Cross
 		ref.ID = bson.NewObjectID()
 	}
 
-	_, err := r.refs.InsertOne(ctx, ref)
+	// Check reverse direction (B→A when A→B exists)
+	reverseCount, err := r.refs.CountDocuments(ctx, bson.M{
+		"sourceType": ref.TargetType,
+		"sourceId":   ref.TargetID,
+		"targetType": ref.SourceType,
+		"targetId":   ref.SourceID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if reverseCount > 0 {
+		return nil, ErrDuplicateCrossReference
+	}
+
+	_, err = r.refs.InsertOne(ctx, ref)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			return nil, ErrDuplicateCrossReference

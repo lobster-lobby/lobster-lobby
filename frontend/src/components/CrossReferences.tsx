@@ -60,11 +60,13 @@ export function CrossReferences({ entityType, entityId }: Props) {
   const handleDelete = async (refId: string) => {
     if (!token) return
     try {
-      await fetch(`/api/cross-references/${refId}`, {
+      const res = await fetch(`/api/cross-references/${refId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       })
-      setRefs(prev => prev.filter(r => r.id !== refId))
+      if (res.ok) {
+        setRefs(prev => prev.filter(r => r.id !== refId))
+      }
     } catch {
       // ignore
     }
