@@ -203,7 +203,7 @@ func (h *AuthHandler) Me(c *gin.Context) {
 }
 
 func (h *AuthHandler) issueTokenPair(c *gin.Context, user *models.User) (string, string, error) {
-	access, err := h.jwtSvc.GenerateAccessToken(user.ID.Hex(), user.Type)
+	access, err := h.jwtSvc.GenerateAccessToken(user.ID.Hex(), user.Type, user.Role)
 	if err != nil {
 		return "", "", err
 	}

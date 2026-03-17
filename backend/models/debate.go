@@ -33,6 +33,8 @@ type Argument struct {
 	Upvotes    int           `bson:"upvotes" json:"upvotes"`
 	Downvotes  int           `bson:"downvotes" json:"downvotes"`
 	Score      int           `bson:"score" json:"score"` // upvotes - downvotes
+	Flagged    bool          `bson:"flagged" json:"flagged"`
+	FlagCount  int           `bson:"flagCount" json:"flagCount"`
 	CreatedAt  time.Time     `bson:"createdAt" json:"createdAt"`
 	UpdatedAt  time.Time     `bson:"updatedAt" json:"updatedAt"`
 }
@@ -42,6 +44,22 @@ type ArgumentResponse struct {
 	AuthorUsername string `bson:"authorUsername" json:"authorUsername"`
 	AuthorRepTier  string `bson:"authorRepTier" json:"authorRepTier"`
 	UserVote       int    `bson:"userVote" json:"userVote"` // 0, 1, or -1
+}
+
+type Flag struct {
+	ID         bson.ObjectID `bson:"_id,omitempty" json:"id"`
+	ArgumentID bson.ObjectID `bson:"argumentId" json:"argumentId"`
+	DebateID   bson.ObjectID `bson:"debateId" json:"debateId"`
+	UserID     bson.ObjectID `bson:"userId" json:"userId"`
+	Reason     string        `bson:"reason" json:"reason"` // "spam"|"harassment"|"misinformation"|"off-topic"
+	CreatedAt  time.Time     `bson:"createdAt" json:"createdAt"`
+}
+
+type FlaggedArgumentDetail struct {
+	Argument       `bson:",inline"`
+	AuthorUsername string `bson:"authorUsername" json:"authorUsername"`
+	DebateSlug     string `bson:"debateSlug" json:"debateSlug"`
+	DebateTitle    string `bson:"debateTitle" json:"debateTitle"`
 }
 
 type Vote struct {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.uber.org/zap"
 
 	"github.com/lobster-lobby/lobster-lobby/middleware"
@@ -19,12 +20,13 @@ import (
 
 type DebatesHandler struct {
 	debates       *repository.DebateRepository
+	users         *repository.UserRepository
 	logger        *zap.Logger
 	reputationSvc *services.ReputationService
 }
 
-func NewDebatesHandler(debates *repository.DebateRepository, logger *zap.Logger, reputationSvc *services.ReputationService) *DebatesHandler {
-	return &DebatesHandler{debates: debates, logger: logger, reputationSvc: reputationSvc}
+func NewDebatesHandler(debates *repository.DebateRepository, users *repository.UserRepository, logger *zap.Logger, reputationSvc *services.ReputationService) *DebatesHandler {
+	return &DebatesHandler{debates: debates, users: users, logger: logger, reputationSvc: reputationSvc}
 }
 
 var slugRegexp = regexp.MustCompile(`[^a-z0-9]+`)
@@ -187,6 +189,13 @@ func (h *DebatesHandler) CreateArgument(c *gin.Context) {
 		return
 	}
 
+	// Check if user is banned
+	user, err := h.users.FindByID(c, userID)
+	if err == nil && user != nil && user.Banned {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Banned users cannot post"})
+		return
+	}
+
 	userType := "human"
 	if ut, exists := c.Get(middleware.ContextUserType); exists {
 		userType = ut.(string)
@@ -316,4 +325,76 @@ func (h *DebatesHandler) VoteOnArgument(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"vote": newValue})
+}
+
+func (h *DebatesHandler) FlagArgument(c *gin.Context) {
+	slug := c.Param("slug")
+	debate, err := h.debates.GetDebateBySlug(c, slug)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "debate not found"})
+		return
+	}
+
+	argIDStr := c.Param("id")
+	argID, err := bson.ObjectIDFromHex(argIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid argument id"})
+		return
+	}
+
+	userIDStr, _ := c.Get(middleware.ContextUserID)
+	userID, err := bson.ObjectIDFromHex(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	argument, err := h.debates.GetArgumentByID(c, argID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "argument not found"})
+		return
+	}
+	if argument.DebateID != debate.ID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "argument does not belong to this debate"})
+		return
+	}
+
+	var req struct {
+		Reason string `json:"reason"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	validReasons := map[string]bool{"spam": true, "harassment": true, "misinformation": true, "off-topic": true}
+	if !validReasons[req.Reason] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "reason must be one of: spam, harassment, misinformation, off-topic"})
+		return
+	}
+
+	flag := &models.Flag{
+		ArgumentID: argID,
+		DebateID:   debate.ID,
+		UserID:     userID,
+		Reason:     req.Reason,
+	}
+
+	if err := h.debates.CreateFlag(c, flag); err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			c.JSON(http.StatusConflict, gin.H{"error": "you have already flagged this argument"})
+			return
+		}
+		h.logger.Error("failed to create flag", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create flag"})
+		return
+	}
+
+	// Check flag count and auto-flag at threshold
+	count, err := h.debates.GetFlagCount(c, argID)
+	if err == nil && count >= 3 {
+		_ = h.debates.UpdateArgumentFlagged(c, argID, true, int(count))
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"flag": flag})
 }

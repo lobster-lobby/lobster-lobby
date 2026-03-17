@@ -18,6 +18,7 @@ type User struct {
 	DisplayName       string          `bson:"displayName" json:"displayName"`
 	Bio               string          `bson:"bio" json:"bio"`
 	Reputation        ReputationScore `bson:"reputation" json:"reputation"`
+	Banned            bool            `bson:"banned" json:"banned"`
 	Bookmarks         []bson.ObjectID `bson:"bookmarks" json:"bookmarks"`
 	District          *District       `bson:"district,omitempty" json:"district,omitempty"`
 	CreatedAt         time.Time       `bson:"createdAt" json:"createdAt"`
