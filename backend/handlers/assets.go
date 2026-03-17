@@ -171,8 +171,26 @@ func (h *AssetHandler) UploadAsset(c *gin.Context) {
 	}
 	defer file.Close()
 
-	// Validate mime type
-	mimeType := header.Header.Get("Content-Type")
+	// Detect MIME type from file bytes (first 512), ignoring client-supplied Content-Type.
+	sniff := make([]byte, 512)
+	n, _ := file.Read(sniff)
+	mimeType := http.DetectContentType(sniff[:n])
+	// Trim any parameters (e.g. "; charset=utf-8")
+	if idx := strings.Index(mimeType, ";"); idx != -1 {
+		mimeType = strings.TrimSpace(mimeType[:idx])
+	}
+	// http.DetectContentType can't distinguish SVG — check original header as fallback
+	// only when the sniffed type is generic text/xml or text/plain.
+	if mimeType == "text/xml; charset=utf-8" || mimeType == "text/plain; charset=utf-8" || mimeType == "text/xml" || mimeType == "text/plain" {
+		ct := header.Header.Get("Content-Type")
+		if ct == "image/svg+xml" {
+			mimeType = "image/svg+xml"
+		}
+	}
+	// Seek back to beginning so the full file can be read during save.
+	if seeker, ok := file.(io.Seeker); ok {
+		seeker.Seek(0, io.SeekStart)
+	}
 	if !allowedMimeTypes[mimeType] {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file type not allowed, must be PNG, JPEG, SVG, or PDF"})
 		return
@@ -398,6 +416,36 @@ func (h *AssetHandler) Download(c *gin.Context) {
 			"message": "download tracked",
 		})
 	}
+}
+
+// BatchVotes handles GET /api/campaigns/:slug/assets/votes?ids=id1,id2,...
+func (h *AssetHandler) BatchVotes(c *gin.Context) {
+	idsParam := c.Query("ids")
+	if idsParam == "" {
+		c.JSON(http.StatusOK, gin.H{"votes": map[string]int{}})
+		return
+	}
+
+	ids := strings.Split(idsParam, ",")
+	// Trim whitespace
+	for i, id := range ids {
+		ids[i] = strings.TrimSpace(id)
+	}
+
+	userIDStr, exists := c.Get(middleware.ContextUserID)
+	if !exists {
+		c.JSON(http.StatusOK, gin.H{"votes": map[string]int{}})
+		return
+	}
+
+	votes, err := h.assets.GetBatchVotes(c, ids, userIDStr.(string))
+	if err != nil {
+		h.logger.Error("failed to get batch votes", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get votes"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"votes": votes})
 }
 
 // Vote handles POST /api/campaigns/:id/assets/:assetId/vote
@@ -627,43 +675,27 @@ func (h *AssetHandler) updateCampaignAssetCount(c *gin.Context, campaignID strin
 		h.logger.Warn("failed to count assets", zap.Error(err))
 		return
 	}
-
-	campaign, err := h.campaigns.GetByID(c, campaignID)
-	if err != nil || campaign == nil {
-		return
+	// Asset count is always a recount (set, not delta), so $set it atomically.
+	if _, err := h.campaigns.Update(c, campaignID, bson.M{
+		"metrics.assetCount": int(count),
+	}); err != nil {
+		h.logger.Warn("failed to update campaign asset count", zap.Error(err))
 	}
-
-	campaign.Metrics.AssetCount = int(count)
-	h.campaigns.UpdateMetrics(c, campaignID, campaign.Metrics)
 }
 
 func (h *AssetHandler) incrementCampaignDownloads(c *gin.Context, campaignID string) {
-	campaign, err := h.campaigns.GetByID(c, campaignID)
-	if err != nil || campaign == nil {
-		return
-	}
-
-	campaign.Metrics.TotalDownloads++
-	if err := h.campaigns.UpdateMetrics(c, campaignID, campaign.Metrics); err != nil {
+	if err := h.campaigns.IncrMetric(c, campaignID, "totalDownloads", 1); err != nil {
 		h.logger.Warn("failed to update campaign downloads", zap.Error(err))
 	}
 	h.campaigns.RecalcTrending(c, campaignID)
 }
 
 func (h *AssetHandler) incrementCampaignShares(c *gin.Context, campaignID, platform string) {
-	campaign, err := h.campaigns.GetByID(c, campaignID)
-	if err != nil || campaign == nil {
-		return
-	}
-
-	campaign.Metrics.TotalShares++
-	if campaign.Metrics.SharesByPlatform == nil {
-		campaign.Metrics.SharesByPlatform = make(map[string]int)
-	}
-	campaign.Metrics.SharesByPlatform[platform]++
-
-	if err := h.campaigns.UpdateMetrics(c, campaignID, campaign.Metrics); err != nil {
+	if err := h.campaigns.IncrMetric(c, campaignID, "totalShares", 1); err != nil {
 		h.logger.Warn("failed to update campaign shares", zap.Error(err))
+	}
+	if err := h.campaigns.IncrMetric(c, campaignID, "sharesByPlatform."+platform, 1); err != nil {
+		h.logger.Warn("failed to update campaign shares by platform", zap.Error(err))
 	}
 	h.campaigns.RecalcTrending(c, campaignID)
 }

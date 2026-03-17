@@ -218,6 +218,7 @@ func main() {
 			campaigns.POST("/:id/assets", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.CreateTextAsset)
 			campaigns.POST("/:id/assets/upload", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.UploadAsset)
 			campaigns.GET("/:id/assets", assetHandler.List)
+			campaigns.GET("/:id/assets/votes", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.BatchVotes)
 			campaigns.GET("/:id/assets/:assetId", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.Get)
 			campaigns.GET("/:id/assets/:assetId/file", assetHandler.ServeFile)
 			campaigns.POST("/:id/assets/:assetId/download", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.Download)

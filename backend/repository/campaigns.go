@@ -239,6 +239,23 @@ func (r *CampaignRepository) UpdateMetrics(ctx context.Context, id string, metri
 	return err
 }
 
+// IncrMetric atomically increments a campaign metric field by delta using $inc.
+func (r *CampaignRepository) IncrMetric(ctx context.Context, campaignID, field string, delta int) error {
+	oid, err := bson.ObjectIDFromHex(campaignID)
+	if err != nil {
+		return err
+	}
+	_, err = r.coll.UpdateOne(
+		ctx,
+		bson.M{"_id": oid},
+		bson.M{
+			"$inc": bson.M{"metrics." + field: delta},
+			"$set": bson.M{"updatedAt": time.Now().UTC()},
+		},
+	)
+	return err
+}
+
 func (r *CampaignRepository) RecalcTrending(ctx context.Context, id string) error {
 	campaign, err := r.GetByID(ctx, id)
 	if err != nil || campaign == nil {

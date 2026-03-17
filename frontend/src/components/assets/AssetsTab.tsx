@@ -67,25 +67,20 @@ export default function AssetsTab({ campaignId }: AssetsTabProps) {
       setAssets(data.assets)
       setTotal(data.total)
 
-      // Fetch user votes for each asset if authenticated
+      // Fetch user votes in a single batch request
       if (token && data.assets.length > 0) {
-        const votes: Record<string, number> = {}
-        await Promise.all(
-          data.assets.map(async (asset) => {
-            try {
-              const voteRes = await fetch(`/api/campaigns/${campaignId}/assets/${asset.id}`, {
-                headers: { 'Authorization': `Bearer ${token}` },
-              })
-              if (voteRes.ok) {
-                const voteData = await voteRes.json()
-                votes[asset.id] = voteData.userVote || 0
-              }
-            } catch {
-              // Ignore individual vote fetch errors
-            }
+        try {
+          const ids = data.assets.map((a) => a.id).join(',')
+          const voteRes = await fetch(`/api/campaigns/${campaignId}/assets/votes?ids=${ids}`, {
+            headers: { 'Authorization': `Bearer ${token}` },
           })
-        )
-        setUserVotes(votes)
+          if (voteRes.ok) {
+            const voteData = await voteRes.json()
+            setUserVotes(voteData.votes || {})
+          }
+        } catch {
+          // Ignore vote fetch errors — non-critical
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')

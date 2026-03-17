@@ -324,6 +324,42 @@ func (r *AssetRepository) CountByCampaign(ctx context.Context, campaignID string
 	return r.assets.CountDocuments(ctx, bson.M{"campaignId": oid})
 }
 
+// GetBatchVotes returns a map of assetID → vote value for the given user and asset IDs.
+func (r *AssetRepository) GetBatchVotes(ctx context.Context, assetIDs []string, userID string) (map[string]int, error) {
+	userOID, err := bson.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	oids := make([]bson.ObjectID, 0, len(assetIDs))
+	for _, id := range assetIDs {
+		oid, err := bson.ObjectIDFromHex(id)
+		if err != nil {
+			continue
+		}
+		oids = append(oids, oid)
+	}
+
+	cursor, err := r.votes.Find(ctx, bson.M{
+		"assetId": bson.M{"$in": oids},
+		"userId":  userOID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	result := make(map[string]int)
+	for cursor.Next(ctx) {
+		var vote models.AssetVote
+		if err := cursor.Decode(&vote); err != nil {
+			continue
+		}
+		result[vote.AssetID.Hex()] = vote.Value
+	}
+	return result, cursor.Err()
+}
+
 func (r *AssetRepository) getSortField(sort string) bson.D {
 	switch sort {
 	case "newest":
