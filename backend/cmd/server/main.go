@@ -101,6 +101,12 @@ func main() {
 	searchHandler := handlers.NewSearchHandler(searchSvc, logger)
 	debateHandler := handlers.NewDebateHandler(commentRepo, policyRepo, logger, reputationSvc)
 
+	researchRepo := repository.NewResearchRepository(mongo)
+	if err := researchRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("research indexes", zap.Error(err))
+	}
+	researchHandler := handlers.NewResearchHandler(researchRepo, policyRepo, logger)
+
 	rateLimiter := middleware.NewRateLimiter()
 
 	if cfg.Env != "development" {
@@ -145,6 +151,13 @@ func main() {
 			policies.POST("/:id/debate/:commentId/react", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.ReactToComment)
 			policies.POST("/:id/stance", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.SetStance)
 			policies.GET("/:id/stance", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.GetStance)
+
+			// Research routes
+			policies.POST("/:id/research", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), researchHandler.Create)
+			policies.GET("/:id/research", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), researchHandler.List)
+			policies.GET("/:id/research/:researchId", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), researchHandler.GetByID)
+			policies.PATCH("/:id/research/:researchId", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), researchHandler.Update)
+			policies.POST("/:id/research/:researchId/react", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), researchHandler.React)
 		}
 
 		api.GET("/search", searchHandler.Search)
