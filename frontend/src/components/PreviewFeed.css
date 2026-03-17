@@ -1,5 +1,6 @@
 .preview-feed {
-  background: #f9f9fb;
+  background:
+    linear-gradient(180deg, var(--ll-bg-elevated) 0%, var(--ll-bg) 100%);
   padding: 4rem 1.5rem;
 }
 
@@ -8,11 +9,12 @@
   font-weight: 700;
   margin: 0 0 0.5rem;
   text-align: center;
+  color: var(--ll-text);
 }
 
 .preview-feed-subtitle {
   text-align: center;
-  color: #666;
+  color: var(--ll-text-secondary);
   margin: 0 0 2.5rem;
 }
 
@@ -25,10 +27,16 @@
 }
 
 .preview-card {
-  background: #fff;
-  border: 1px solid #e8e8e8;
-  border-radius: 10px;
+  background: var(--ll-bg-card);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-lg);
   padding: 1.5rem;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.preview-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ll-shadow-md);
 }
 
 .preview-card-tags {
@@ -39,23 +47,24 @@
 }
 
 .preview-tag {
-  background: #eef2ff;
-  color: #4f46e5;
+  background: var(--ll-primary-tint);
+  color: var(--ll-primary);
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--ll-radius-full);
 }
 
 .preview-card-title {
   font-size: 1.1rem;
   font-weight: 600;
+  color: var(--ll-text);
   margin: 0 0 0.5rem;
 }
 
 .preview-card-summary {
   font-size: 0.9rem;
-  color: #555;
+  color: var(--ll-text-secondary);
   margin: 0 0 1rem;
   line-height: 1.55;
 }
@@ -70,15 +79,16 @@
 .preview-login-prompt {
   font-size: 0.85rem;
   padding: 0.35rem 0.85rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-sm);
   text-decoration: none;
-  color: #374151;
-  transition: background 0.15s;
+  color: var(--ll-text-secondary);
+  transition: background 150ms ease, border-color 150ms ease;
 }
 
 .preview-login-prompt:hover {
-  background: #f3f4f6;
+  background: var(--ll-bg-elevated);
+  border-color: var(--ll-text-muted);
 }
 
 .preview-card-stats {
@@ -86,7 +96,13 @@
   gap: 0.75rem;
   margin-left: auto;
   font-size: 0.85rem;
-  color: #888;
+  color: var(--ll-text-muted);
+}
+
+.preview-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .preview-feed-cta {
@@ -95,12 +111,18 @@
 }
 
 .preview-signup-link {
+  display: inline-block;
   font-size: 1rem;
   font-weight: 600;
-  color: #4f46e5;
+  color: var(--ll-primary);
   text-decoration: none;
+  padding: 0.5rem 1.5rem;
+  border: 2px solid var(--ll-primary);
+  border-radius: var(--ll-radius-full);
+  transition: background 150ms ease, color 150ms ease;
 }
 
 .preview-signup-link:hover {
-  text-decoration: underline;
+  background: var(--ll-primary);
+  color: white;
 }

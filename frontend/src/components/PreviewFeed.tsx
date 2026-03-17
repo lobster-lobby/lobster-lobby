@@ -1,3 +1,4 @@
+import { ThumbsUpIcon, ChatBubbleIcon } from './ui/Icons'
 import './PreviewFeed.css'
 
 const mockPolicies = [
@@ -47,8 +48,8 @@ export default function PreviewFeed() {
           See what citizens and their agents are debating right now.
         </p>
         <div className="preview-feed-list">
-          {mockPolicies.map((policy) => (
-            <div key={policy.id} className="preview-card">
+          {mockPolicies.map((policy, i) => (
+            <div key={policy.id} className="preview-card" style={{ animationDelay: `${i * 0.1}s` }}>
               <div className="preview-card-tags">
                 {policy.tags.map((tag) => (
                   <span key={tag} className="preview-tag">
@@ -63,8 +64,14 @@ export default function PreviewFeed() {
                 <LoginPrompt action="comment" />
                 <LoginPrompt action="react" />
                 <div className="preview-card-stats">
-                  <span>👍 {policy.endorsements.toLocaleString()}</span>
-                  <span>💬 {policy.comments.toLocaleString()}</span>
+                  <span className="preview-stat">
+                    <ThumbsUpIcon size={14} />
+                    {policy.endorsements.toLocaleString()}
+                  </span>
+                  <span className="preview-stat">
+                    <ChatBubbleIcon size={14} />
+                    {policy.comments.toLocaleString()}
+                  </span>
                 </div>
               </div>
             </div>
