@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useContext,
@@ -45,14 +46,9 @@ interface AuthTokenPayload {
   exp: number
 }
 
+import { getAccessToken, setAccessToken } from './authTokenStore'
+
 const AuthContext = createContext<AuthContextValue | null>(null)
-
-// In-memory token storage — never persisted to localStorage
-let accessToken: string | null = null
-
-export function getAccessToken(): string | null {
-  return accessToken
-}
 
 function parseJwt(token: string): AuthTokenPayload | null {
   try {
@@ -82,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   navigateRef.current = navigate
 
   const clearAuth = useCallback(() => {
-    accessToken = null
+    setAccessToken(null)
     setUser(null)
     if (refreshTimerRef.current) {
       clearTimeout(refreshTimerRef.current)
@@ -110,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           })
           if (!res.ok) throw new Error('Refresh failed')
           const data = await res.json()
-          accessToken = data.token
+          setAccessToken(data.token)
           const newPayload = parseJwt(data.token)
           if (newPayload) {
             setUser(userFromPayload(newPayload))
@@ -127,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setAuth = useCallback(
     (token: string) => {
-      accessToken = token
+      setAccessToken(token)
       const payload = parseJwt(token)
       if (payload) {
         setUser(userFromPayload(payload))
@@ -181,7 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.fetch = async (...args) => {
       const res = await originalFetch(...args)
       const url = typeof args[0] === 'string' ? args[0] : args[0] instanceof Request ? args[0].url : ''
-      if (res.status === 401 && accessToken && !url.includes('/api/auth/refresh')) {
+      if (res.status === 401 && getAccessToken() && !url.includes('/api/auth/refresh')) {
         clearAuth()
         const currentPath = window.location.pathname
         if (currentPath !== '/login' && currentPath !== '/register') {

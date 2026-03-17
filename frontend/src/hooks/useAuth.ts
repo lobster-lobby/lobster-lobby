@@ -1,2 +1,3 @@
 // Re-export from AuthContext for backward compatibility
-export { useAuth, getAccessToken } from '../contexts/AuthContext'
+export { useAuth } from '../contexts/AuthContext'
+export { getAccessToken } from '../contexts/authTokenStore'
