@@ -16,7 +16,7 @@ export function Logo({
     return (
       <svg
         viewBox="0 0 40 40"
-        width={typeof width === 'number' ? width * 0.22 : 40}
+        width={typeof width === 'number' ? width * 0.22 : 40} {/* 0.22 = icon-only viewBox (40×40) scales to ~22% of full logo width */}
         height={height}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"

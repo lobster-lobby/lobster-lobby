@@ -119,7 +119,7 @@ export default function Home() {
             </div>
           </div>
           <div className="hero-illustration">
-            <LobsterMascot pose="waving" width={280} height={280} className="hero-mascot" />
+            <LobsterMascot pose="waving" width={280} height={280} className="hero-graphic" />
           </div>
         </div>
       </section>

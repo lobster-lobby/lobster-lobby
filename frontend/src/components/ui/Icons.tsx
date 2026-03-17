@@ -206,8 +206,8 @@ export function ResearchIcon(props: IconProps) {
       <path d="M21 21l-4.35-4.35" />
       {/* Small lobster inside */}
       <ellipse cx="10" cy="11" rx="2" ry="2.5" fill="currentColor" opacity="0.15" stroke="none" />
-      <path d="M8.5 9 Q8 8 7.5 8" strokeWidth="1" />
-      <path d="M11.5 9 Q12 8 12.5 8" strokeWidth="1" />
+      <path d="M8.5 9 Q8 8 7.5 8" stroke="currentColor" fill="none" strokeWidth="1" />
+      <path d="M11.5 9 Q12 8 12.5 8" stroke="currentColor" fill="none" strokeWidth="1" />
     </svg>
   )
 }

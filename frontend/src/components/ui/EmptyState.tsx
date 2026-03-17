@@ -7,7 +7,15 @@ export interface EmptyStateProps extends HTMLAttributes<HTMLDivElement> {
   heading: string
   description?: string
   action?: ReactNode
+  /**
+   * Icon variant to display when no mascot is provided.
+   * Mutually exclusive with `mascot` — if `mascot` is set, `icon` is ignored.
+   */
   icon?: 'box' | 'search' | 'doc' | 'chat'
+  /**
+   * Lobster mascot pose to display instead of an icon.
+   * Mutually exclusive with `icon` — takes precedence when both are provided.
+   */
   mascot?: MascotPose
 }
 
