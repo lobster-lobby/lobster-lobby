@@ -28,12 +28,12 @@
 
 .upvote.active {
   color: var(--ll-support);
-  background: rgba(45, 158, 92, 0.1);
+  background: var(--ll-support-tint);
   border-color: var(--ll-support);
 }
 
 .downvote.active {
   color: var(--ll-oppose);
-  background: rgba(212, 137, 42, 0.1);
+  background: var(--ll-oppose-tint);
   border-color: var(--ll-oppose);
 }

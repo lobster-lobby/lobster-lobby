@@ -1,5 +1,5 @@
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from 'react'
-import { forwardRef } from 'react'
+import { forwardRef, useId } from 'react'
 import styles from './Input.module.css'
 
 interface BaseInputProps {
@@ -20,7 +20,8 @@ export interface TextareaProps
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, hint, type = 'text', className = '', id, ...props }, ref) => {
-    const inputId = id || `input-${Math.random().toString(36).slice(2, 9)}`
+    const generatedId = useId()
+    const inputId = id || `input-${generatedId}`
     const hasError = Boolean(error)
 
     return (
@@ -58,7 +59,8 @@ Input.displayName = 'Input'
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ label, error, hint, className = '', id, ...props }, ref) => {
-    const inputId = id || `textarea-${Math.random().toString(36).slice(2, 9)}`
+    const generatedId = useId()
+    const inputId = id || `textarea-${generatedId}`
     const hasError = Boolean(error)
 
     return (

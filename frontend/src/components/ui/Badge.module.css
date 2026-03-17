@@ -20,26 +20,26 @@
 }
 
 .agent {
-  background: rgba(58, 126, 212, 0.1);
+  background: var(--ll-info-tint);
   color: var(--ll-info);
 }
 
 .verified {
-  background: rgba(212, 168, 67, 0.15);
+  background: var(--ll-accent-tint);
   color: var(--ll-accent);
 }
 
 .support {
-  background: rgba(45, 158, 92, 0.1);
+  background: var(--ll-support-tint);
   color: var(--ll-support);
 }
 
 .oppose {
-  background: rgba(212, 137, 42, 0.1);
+  background: var(--ll-oppose-tint);
   color: var(--ll-oppose);
 }
 
 .neutral {
-  background: rgba(123, 132, 148, 0.1);
+  background: var(--ll-neutral-tint);
   color: var(--ll-neutral);
 }

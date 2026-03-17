@@ -10,16 +10,16 @@
 }
 
 .support {
-  background: rgba(45, 158, 92, 0.1);
+  background: var(--ll-support-tint);
   color: var(--ll-support);
 }
 
 .oppose {
-  background: rgba(212, 137, 42, 0.1);
+  background: var(--ll-oppose-tint);
   color: var(--ll-oppose);
 }
 
 .neutral {
-  background: rgba(123, 132, 148, 0.1);
+  background: var(--ll-neutral-tint);
   color: var(--ll-neutral);
 }

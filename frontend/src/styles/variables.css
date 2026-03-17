@@ -17,6 +17,18 @@
   --ll-success: #2D9E5C;
   --ll-warning: #D4892A;
   --ll-error: #D44B3A;
+  --ll-danger-hover: #B53E2F;
+  --ll-primary-tint: color-mix(in srgb, var(--ll-primary) 10%, transparent);
+  --ll-primary-tint-focus: color-mix(in srgb, var(--ll-primary) 10%, transparent);
+  --ll-error-tint: color-mix(in srgb, var(--ll-error) 10%, transparent);
+  --ll-info-tint: color-mix(in srgb, var(--ll-info) 10%, transparent);
+  --ll-accent-tint: color-mix(in srgb, var(--ll-accent) 15%, transparent);
+  --ll-support-tint: color-mix(in srgb, var(--ll-support) 10%, transparent);
+  --ll-oppose-tint: color-mix(in srgb, var(--ll-oppose) 10%, transparent);
+  --ll-neutral-tint: color-mix(in srgb, var(--ll-neutral) 10%, transparent);
+  --ll-bg-overlay: rgba(255, 255, 255, 0.9);
+  --ll-bg-overlay-dim: rgba(255, 255, 255, 0.7);
+  --ll-bg-overlay-faint: rgba(255, 255, 255, 0.5);
   --ll-info: #3A7ED4;
   --ll-font: 'Inter', system-ui, sans-serif;
   --ll-font-heading: 'Inter', system-ui, sans-serif;
@@ -42,4 +54,9 @@
   --ll-text: #E8ECF1;
   --ll-text-secondary: #9AA3B0;
   --ll-border: #2A3545;
+  --ll-text-muted: #A8B1BD;
+  --ll-bg-overlay: rgba(30, 40, 60, 0.9);
+  --ll-bg-overlay-dim: rgba(30, 40, 60, 0.7);
+  --ll-bg-overlay-faint: rgba(30, 40, 60, 0.5);
+  --ll-danger-hover: #C94535;
 }
