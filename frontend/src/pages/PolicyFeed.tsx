@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { TabNav, SearchBar, Button, Spinner, EmptyState, Skeleton } from '../components/ui'
 import { PolicyCard } from '../components/PolicyCard'
@@ -69,10 +69,26 @@ export default function PolicyFeed() {
   const sort = searchParams.get('sort') || 'hot'
   const topRange = searchParams.get('topRange') || 'week'
   const search = searchParams.get('q') || ''
-  const selectedTypes = searchParams.get('type')?.split(',').filter(Boolean) || []
-  const selectedLevels = searchParams.get('level')?.split(',').filter(Boolean) || []
+  const selectedTypes = useMemo(
+    () => searchParams.get('type')?.split(',').filter(Boolean) || [],
+    [searchParams],
+  )
+  const selectedLevels = useMemo(
+    () => searchParams.get('level')?.split(',').filter(Boolean) || [],
+    [searchParams],
+  )
   const selectedState = searchParams.get('state') || ''
-  const selectedTags = searchParams.get('tags')?.split(',').filter(Boolean) || []
+  const selectedTags = useMemo(
+    () => searchParams.get('tags')?.split(',').filter(Boolean) || [],
+    [searchParams],
+  )
+
+  // Debounced search for API requests
+  const [debouncedSearch, setDebouncedSearch] = useState(search)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(timer)
+  }, [search])
 
   const hasActiveFilters = selectedTypes.length > 0 || selectedLevels.length > 0 ||
     selectedState !== '' || selectedTags.length > 0 || search !== ''
@@ -105,10 +121,11 @@ export default function PolicyFeed() {
     params.set('page', String(page))
     params.set('perPage', String(PER_PAGE))
     params.set('sort', sort === 'top' ? `top_${topRange}` : sort)
-    if (selectedTypes.length === 1) params.set('type', selectedTypes[0])
-    if (selectedLevels.length === 1) params.set('level', selectedLevels[0])
+    if (selectedTypes.length > 0) params.set('type', selectedTypes.join(','))
+    if (selectedLevels.length > 0) params.set('level', selectedLevels.join(','))
     if (selectedState) params.set('state', selectedState)
     if (selectedTags.length > 0) params.set('tags', selectedTags.join(','))
+    if (debouncedSearch) params.set('q', debouncedSearch)
 
     try {
       const res = await fetch(`/api/policies?${params.toString()}`)
@@ -131,7 +148,7 @@ export default function PolicyFeed() {
         error: err instanceof Error ? err.message : 'Something went wrong',
       }))
     }
-  }, [sort, topRange, selectedTypes, selectedLevels, selectedState, selectedTags])
+  }, [sort, topRange, selectedTypes, selectedLevels, selectedState, selectedTags, debouncedSearch])
 
   // Reset and fetch on filter/sort change
   useEffect(() => {

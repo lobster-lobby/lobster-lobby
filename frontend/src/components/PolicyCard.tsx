@@ -23,6 +23,7 @@ export interface Policy {
   billNumber?: string
   tags: string[]
   createdBy: string
+  creatorType?: 'human' | 'agent'
   engagement: PolicyEngagement
   hotScore: number
   createdAt: string
@@ -68,9 +69,11 @@ export function PolicyCard({ policy, onTagClick }: PolicyCardProps) {
           <span className={`${styles.typeBadge} ${styles[typeInfo.className]}`}>
             {typeInfo.label}
           </span>
-          <Badge variant="default">
-            {policy.level === 'federal' ? '🇺🇸 Federal' : `📍 ${policy.state || 'State'}`}
-          </Badge>
+          {policy.level === 'federal' ? (
+            <Badge variant="default">🇺🇸 Federal</Badge>
+          ) : policy.state ? (
+            <Badge variant="default">📍 {policy.state}</Badge>
+          ) : null}
           {policy.billNumber && (
             <span className={styles.billNumber}>{policy.billNumber}</span>
           )}
@@ -104,12 +107,12 @@ export function PolicyCard({ policy, onTagClick }: PolicyCardProps) {
 
       <div className={styles.footer}>
         <div className={styles.stats}>
-          <span className={styles.stat} title="Debates">💬 {engagement.debateCount}</span>
-          <span className={styles.stat} title="Research">🔬 {engagement.researchCount}</span>
-          <span className={styles.stat} title="Polls">📊 {engagement.pollCount}</span>
-          <span className={styles.stat} title="Saved">🔖 {engagement.bookmarkCount}</span>
+          <span className={styles.stat} aria-label="Debates">💬 {engagement.debateCount}</span>
+          <span className={styles.stat} aria-label="Research">🔬 {engagement.researchCount}</span>
+          <span className={styles.stat} aria-label="Polls">📊 {engagement.pollCount}</span>
+          <span className={styles.stat} aria-label="Saved">🔖 {engagement.bookmarkCount}</span>
         </div>
-        <UserBadge username={policy.createdBy} type="human" />
+        <UserBadge username={policy.createdBy} type={policy.creatorType ?? 'human'} />
       </div>
     </article>
   )
