@@ -11,6 +11,7 @@ import CreatePolicy from './pages/CreatePolicy'
 import Search from './pages/Search'
 import Bookmarks from './pages/Bookmarks'
 import Representatives from './pages/Representatives'
+import CampaignDetail from './pages/CampaignDetail'
 import Dashboard from './pages/Dashboard'
 import Settings from './pages/Settings'
 import UserProfile from './pages/UserProfile'
@@ -46,6 +47,7 @@ export default function App() {
               }
             />
             <Route path="/representatives" element={<Representatives />} />
+            <Route path="/campaigns/:slug" element={<CampaignDetail />} />
             <Route
               path="/dashboard"
               element={
