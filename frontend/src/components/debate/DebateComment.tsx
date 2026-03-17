@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth, getAccessToken } from '../../hooks/useAuth'
 import { UserBadge, VoteButtons } from '../ui'
 import CommentComposer from './CommentComposer'
 import type { Comment } from '../../types/debate'
@@ -40,7 +40,7 @@ export default function DebateComment({ comment, policyId, depth = 0 }: DebateCo
     if (loadingReplies) return
     setLoadingReplies(true)
     try {
-      const token = localStorage.getItem('ll_token')
+      const token = getAccessToken()
       const headers: HeadersInit = {}
       if (token) headers['Authorization'] = `Bearer ${token}`
 
@@ -59,7 +59,7 @@ export default function DebateComment({ comment, policyId, depth = 0 }: DebateCo
   async function handleReact(value: number) {
     if (!isAuthenticated) return
     const newValue = currentReaction === value ? 0 : value
-    const token = localStorage.getItem('ll_token')
+    const token = getAccessToken()
 
     try {
       const res = await fetch(`/api/policies/${policyId}/debate/${comment.id}/react`, {

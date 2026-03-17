@@ -2,7 +2,7 @@ import { useState, useEffect, Suspense, lazy } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { TabNav, Button, Badge, UserBadge, Toast, Spinner, Card, Skeleton } from '../components/ui'
 import type { Policy } from '../components/PolicyCard'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth, getAccessToken } from '../hooks/useAuth'
 import styles from './PolicyDetail.module.css'
 
 const TYPE_CONFIG = {
@@ -76,7 +76,7 @@ export default function PolicyDetail() {
       setError(null)
 
       try {
-        const token = localStorage.getItem('ll_token')
+        const token = getAccessToken()
         const headers: HeadersInit = {}
         if (token) {
           headers['Authorization'] = `Bearer ${token}`
@@ -153,7 +153,7 @@ export default function PolicyDetail() {
 
     setBookmarkLoading(true)
     try {
-      const token = localStorage.getItem('ll_token')
+      const token = getAccessToken()
       const res = await fetch(`/api/policies/${policy.id}/bookmark`, {
         method: 'POST',
         headers: {

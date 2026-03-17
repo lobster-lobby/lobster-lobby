@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth, getAccessToken } from '../../hooks/useAuth'
 import { Card, TabNav, Spinner, EmptyState, Badge } from '../ui'
 import PositionBar from '../debate/PositionBar'
 import CommentComposer from '../debate/CommentComposer'
@@ -38,7 +38,7 @@ export default function DebateTab({ policyId }: DebateTabProps) {
   const fetchComments = useCallback(async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('ll_token')
+      const token = getAccessToken()
       const headers: HeadersInit = {}
       if (token) headers['Authorization'] = `Bearer ${token}`
 
@@ -64,7 +64,7 @@ export default function DebateTab({ policyId }: DebateTabProps) {
   const fetchStance = useCallback(async () => {
     if (!isAuthenticated) return
     try {
-      const token = localStorage.getItem('ll_token')
+      const token = getAccessToken()
       const res = await fetch(`/api/policies/${policyId}/stance`, {
         headers: { 'Authorization': `Bearer ${token}` },
       })

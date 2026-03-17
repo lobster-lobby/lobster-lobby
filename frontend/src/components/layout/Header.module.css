@@ -51,6 +51,10 @@
   flex-shrink: 0;
 }
 
+.userMenu {
+  position: relative;
+}
+
 .avatar {
   display: flex;
   align-items: center;
@@ -63,6 +67,68 @@
   text-decoration: none;
   font-weight: 600;
   font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.avatar:hover {
+  background: var(--ll-primary-hover);
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + var(--ll-space-sm));
+  right: 0;
+  min-width: 200px;
+  background: var(--ll-bg-card);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-md);
+  box-shadow: var(--ll-shadow-lg);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.dropdownUser {
+  padding: var(--ll-space-sm) var(--ll-space-md);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdownUsername {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ll-text);
+}
+
+.dropdownEmail {
+  font-size: 0.75rem;
+  color: var(--ll-text-muted);
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: var(--ll-border);
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  padding: var(--ll-space-sm) var(--ll-space-md);
+  font-size: 0.875rem;
+  font-family: var(--ll-font);
+  color: var(--ll-text);
+  text-decoration: none;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.dropdownItem:hover {
+  background: var(--ll-bg-elevated);
 }
 
 .avatarText {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth, getAccessToken } from '../../hooks/useAuth'
 import { Button, Input, Textarea } from '../ui'
 import type { ResearchResponse, ResearchType } from '../../types/research'
 import styles from './ResearchSubmit.module.css'
@@ -90,7 +90,7 @@ export function ResearchSubmit({ policyId, onSubmitted, onCancel }: ResearchSubm
 
     setLoading(true)
     try {
-      const token = localStorage.getItem('ll_token')
+      const token = getAccessToken()
       const validSources = sources
         .filter(s => s.url.trim() && s.title.trim())
         .map(s => ({ url: s.url.trim(), title: s.title.trim() }))

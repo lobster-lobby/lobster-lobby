@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth, getAccessToken } from '../../hooks/useAuth'
 import { Button } from '../ui'
 import type { Comment, Position } from '../../types/debate'
 import styles from './CommentComposer.module.css'
@@ -42,7 +42,7 @@ export default function CommentComposer({ policyId, onCommentCreated, parentId }
     setError(null)
 
     try {
-      const token = localStorage.getItem('ll_token')
+      const token = getAccessToken()
       const body: Record<string, string> = { content: content.trim(), position: position! }
       if (parentId) body.parentId = parentId
 

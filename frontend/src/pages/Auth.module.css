@@ -1,0 +1,207 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--ll-space-lg);
+  background: var(--ll-bg);
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--ll-bg-card);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-lg);
+  box-shadow: var(--ll-shadow-md);
+  padding: var(--ll-space-2xl) var(--ll-space-xl);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ll-space-sm);
+  margin-bottom: var(--ll-space-xl);
+  text-decoration: none;
+}
+
+.logoIcon {
+  font-size: 1.75rem;
+}
+
+.logoText {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ll-text);
+}
+
+.title {
+  margin: 0 0 var(--ll-space-xs);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ll-text);
+  text-align: center;
+}
+
+.subtitle {
+  margin: 0 0 var(--ll-space-xl);
+  font-size: 0.925rem;
+  color: var(--ll-text-secondary);
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-md);
+}
+
+.error {
+  padding: var(--ll-space-sm) var(--ll-space-md);
+  font-size: 0.875rem;
+  color: var(--ll-error);
+  background: var(--ll-error-tint);
+  border: 1px solid var(--ll-error);
+  border-radius: var(--ll-radius-md);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ll-space-md);
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-sm);
+  font-size: 0.875rem;
+  color: var(--ll-text);
+  cursor: pointer;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  accent-color: var(--ll-primary);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.link {
+  font-size: 0.875rem;
+  color: var(--ll-primary);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.submitBtn {
+  width: 100%;
+  margin-top: var(--ll-space-sm);
+}
+
+.footer {
+  margin-top: var(--ll-space-lg);
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--ll-text-secondary);
+}
+
+.footer a {
+  color: var(--ll-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+/* Account type toggle */
+.toggleGroup {
+  display: flex;
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-md);
+  overflow: hidden;
+}
+
+.toggleBtn {
+  flex: 1;
+  padding: var(--ll-space-sm) var(--ll-space-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--ll-font);
+  color: var(--ll-text-secondary);
+  background: var(--ll-bg-card);
+  border: none;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.toggleBtn:first-child {
+  border-right: 1px solid var(--ll-border);
+}
+
+.toggleBtn:hover:not(.toggleBtnActive) {
+  background: var(--ll-bg-elevated);
+}
+
+.toggleBtnActive {
+  background: var(--ll-primary);
+  color: white;
+  font-weight: 600;
+}
+
+.fieldLabel {
+  display: block;
+  margin-bottom: var(--ll-space-xs);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ll-text);
+}
+
+.tosLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ll-space-sm);
+  font-size: 0.8rem;
+  color: var(--ll-text-secondary);
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.tosLabel input[type="checkbox"] {
+  accent-color: var(--ll-primary);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.tosLabel a {
+  color: var(--ll-primary);
+  text-decoration: none;
+}
+
+.tosLabel a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: var(--ll-space-md);
+    align-items: flex-start;
+    padding-top: var(--ll-space-2xl);
+  }
+
+  .card {
+    padding: var(--ll-space-xl) var(--ll-space-lg);
+    box-shadow: none;
+    border: none;
+  }
+}
