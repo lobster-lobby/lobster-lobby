@@ -14,6 +14,7 @@ interface User {
   id: string
   username: string
   email?: string
+  role?: string
 }
 
 interface AuthContextValue {
@@ -44,6 +45,7 @@ interface AuthTokenPayload {
   username: string
   email: string
   exp: number
+  role?: string
 }
 
 import { getAccessToken, setAccessToken } from './authTokenStore'
@@ -65,6 +67,7 @@ function userFromPayload(payload: AuthTokenPayload): User {
     id: payload.sub || payload.id || '',
     username: payload.username,
     email: payload.email,
+    role: payload.role,
   }
 }
 

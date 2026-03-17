@@ -160,7 +160,7 @@ func main() {
 	if err := debateRepo.EnsureIndexes(bgCtx); err != nil {
 		logger.Warn("failed to ensure debate indexes", zap.Error(err))
 	}
-	debatesHandler := handlers.NewDebatesHandler(debateRepo, logger, reputationSvc)
+	debatesHandler := handlers.NewDebatesHandler(debateRepo, userRepo, logger, reputationSvc)
 	moderationHandler := handlers.NewModerationHandler(debateRepo, userRepo, logger)
 
 	rateLimiter := middleware.NewRateLimiter()
@@ -277,6 +277,7 @@ func main() {
 		// Admin moderation
 		admin := api.Group("/admin")
 		admin.Use(middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc))
+		admin.Use(middleware.RequireAdmin(userRepo))
 		{
 			admin.GET("/moderation/queue", moderationHandler.GetQueue)
 			admin.POST("/moderation/:id/action", moderationHandler.TakeAction)

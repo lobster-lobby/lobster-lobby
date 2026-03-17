@@ -1,20 +1,38 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.uber.org/zap"
 
-	"github.com/lobster-lobby/lobster-lobby/middleware"
 	"github.com/lobster-lobby/lobster-lobby/models"
 	"github.com/lobster-lobby/lobster-lobby/repository"
 )
 
+// DebateModerationStore is the subset of DebateRepository used by ModerationHandler.
+type DebateModerationStore interface {
+	GetFlaggedArguments(ctx context.Context) ([]models.FlaggedArgumentDetail, error)
+	GetArgumentByID(ctx context.Context, id bson.ObjectID) (*models.Argument, error)
+	UnflagArgument(ctx context.Context, argumentID bson.ObjectID) error
+	DeleteArgument(ctx context.Context, argumentID bson.ObjectID) error
+	BanUser(ctx context.Context, userID bson.ObjectID) error
+}
+
+// UserModerationStore is the subset of UserRepository used by ModerationHandler.
+type UserModerationStore interface {
+	FindByID(ctx context.Context, id bson.ObjectID) (*models.User, error)
+}
+
+// Compile-time assertions: real repos satisfy the interfaces.
+var _ DebateModerationStore = (*repository.DebateRepository)(nil)
+var _ UserModerationStore = (*repository.UserRepository)(nil)
+
 type ModerationHandler struct {
-	debates *repository.DebateRepository
-	users   *repository.UserRepository
+	debates DebateModerationStore
+	users   UserModerationStore
 	logger  *zap.Logger
 }
 
@@ -22,33 +40,7 @@ func NewModerationHandler(debates *repository.DebateRepository, users *repositor
 	return &ModerationHandler{debates: debates, users: users, logger: logger}
 }
 
-func (h *ModerationHandler) requireAdmin(c *gin.Context) (bson.ObjectID, bool) {
-	userIDStr, _ := c.Get(middleware.ContextUserID)
-	userID, err := bson.ObjectIDFromHex(userIDStr.(string))
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})
-		return bson.ObjectID{}, false
-	}
-
-	user, err := h.users.FindByID(c, userID)
-	if err != nil || user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
-		return bson.ObjectID{}, false
-	}
-
-	if user.Role != "admin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "admin access required"})
-		return bson.ObjectID{}, false
-	}
-
-	return userID, true
-}
-
 func (h *ModerationHandler) GetQueue(c *gin.Context) {
-	if _, ok := h.requireAdmin(c); !ok {
-		return
-	}
-
 	flagged, err := h.debates.GetFlaggedArguments(c)
 	if err != nil {
 		h.logger.Error("failed to get moderation queue", zap.Error(err))
@@ -64,10 +56,6 @@ func (h *ModerationHandler) GetQueue(c *gin.Context) {
 }
 
 func (h *ModerationHandler) TakeAction(c *gin.Context) {
-	if _, ok := h.requireAdmin(c); !ok {
-		return
-	}
-
 	argIDStr := c.Param("id")
 	argID, err := bson.ObjectIDFromHex(argIDStr)
 	if err != nil {

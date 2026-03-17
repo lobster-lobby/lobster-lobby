@@ -9,7 +9,7 @@ func TestJWTService(t *testing.T) {
 	svc := NewJWTService("test-secret-key-for-testing")
 
 	t.Run("GenerateAndValidateAccessToken", func(t *testing.T) {
-		token, err := svc.GenerateAccessToken("507f1f77bcf86cd799439011", "human")
+		token, err := svc.GenerateAccessToken("507f1f77bcf86cd799439011", "human", "")
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -50,7 +50,7 @@ func TestJWTService(t *testing.T) {
 	})
 
 	t.Run("WrongSecretRejected", func(t *testing.T) {
-		token, _ := svc.GenerateAccessToken("userid", "human")
+		token, _ := svc.GenerateAccessToken("userid", "human", "")
 		otherSvc := NewJWTService("different-secret")
 		_, err := otherSvc.ValidateAccessToken(token)
 		if err == nil {

@@ -20,12 +20,13 @@ import (
 
 type DebatesHandler struct {
 	debates       *repository.DebateRepository
+	users         *repository.UserRepository
 	logger        *zap.Logger
 	reputationSvc *services.ReputationService
 }
 
-func NewDebatesHandler(debates *repository.DebateRepository, logger *zap.Logger, reputationSvc *services.ReputationService) *DebatesHandler {
-	return &DebatesHandler{debates: debates, logger: logger, reputationSvc: reputationSvc}
+func NewDebatesHandler(debates *repository.DebateRepository, users *repository.UserRepository, logger *zap.Logger, reputationSvc *services.ReputationService) *DebatesHandler {
+	return &DebatesHandler{debates: debates, users: users, logger: logger, reputationSvc: reputationSvc}
 }
 
 var slugRegexp = regexp.MustCompile(`[^a-z0-9]+`)
@@ -185,6 +186,13 @@ func (h *DebatesHandler) CreateArgument(c *gin.Context) {
 	userID, err := bson.ObjectIDFromHex(userIDStr.(string))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	// Check if user is banned
+	user, err := h.users.FindByID(c, userID)
+	if err == nil && user != nil && user.Banned {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Banned users cannot post"})
 		return
 	}
 
@@ -386,8 +394,6 @@ func (h *DebatesHandler) FlagArgument(c *gin.Context) {
 	count, err := h.debates.GetFlagCount(c, argID)
 	if err == nil && count >= 3 {
 		_ = h.debates.UpdateArgumentFlagged(c, argID, true, int(count))
-	} else if err == nil {
-		_ = h.debates.UpdateArgumentFlagged(c, argID, argument.Flagged, int(count))
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"flag": flag})

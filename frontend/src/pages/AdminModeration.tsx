@@ -12,6 +12,7 @@ export default function AdminModeration() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionInProgress, setActionInProgress] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const fetchQueue = useCallback(async () => {
     setLoading(true)
@@ -44,6 +45,7 @@ export default function AdminModeration() {
 
   async function handleAction(argId: string, action: ModerationAction) {
     setActionInProgress(argId)
+    setActionError(null)
     try {
       const token = getAccessToken()
       const res = await fetch(`/api/admin/moderation/${argId}/action`, {
@@ -56,9 +58,12 @@ export default function AdminModeration() {
       })
       if (res.ok) {
         setQueue((prev) => prev.filter((a) => a.id !== argId))
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setActionError(data.error || `Action failed (${res.status})`)
       }
     } catch {
-      // ignore
+      setActionError('Network error — please try again')
     } finally {
       setActionInProgress(null)
     }
@@ -88,6 +93,13 @@ export default function AdminModeration() {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Moderation Queue</h1>
+
+      {actionError && (
+        <div className={styles.actionError} role="alert">
+          {actionError}
+          <button onClick={() => setActionError(null)} aria-label="Dismiss">&times;</button>
+        </div>
+      )}
 
       {queue.length === 0 ? (
         <EmptyState heading="Queue is empty" description="No flagged arguments to review." />

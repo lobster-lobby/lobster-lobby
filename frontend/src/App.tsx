@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { RequireAuth } from './components/RequireAuth'
+import { RequireAdmin } from './components/RequireAdmin'
 import { AppLayout } from './layouts/AppLayout'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -72,9 +73,9 @@ export default function App() {
             <Route
               path="/admin/moderation"
               element={
-                <RequireAuth>
+                <RequireAdmin>
                   <AdminModeration />
-                </RequireAuth>
+                </RequireAdmin>
               }
             />
             <Route path="/u/:username" element={<UserProfile />} />

@@ -425,38 +425,44 @@ func (r *DebateRepository) UpdateArgumentFlagged(ctx context.Context, argumentID
 }
 
 // GetFlaggedArguments returns all arguments where flagged=true, enriched with author and debate info.
+// Uses $lookup aggregation to avoid N+1 queries.
 func (r *DebateRepository) GetFlaggedArguments(ctx context.Context) ([]models.FlaggedArgumentDetail, error) {
-	cursor, err := r.arguments.Find(ctx, bson.M{"flagged": true},
-		options.Find().SetSort(bson.D{{Key: "flagCount", Value: -1}}),
-	)
+	pipeline := bson.A{
+		bson.M{"$match": bson.M{"flagged": true}},
+		bson.M{"$sort": bson.D{{Key: "flagCount", Value: -1}}},
+		bson.M{"$lookup": bson.M{
+			"from":         "users",
+			"localField":   "authorId",
+			"foreignField": "_id",
+			"as":           "_author",
+		}},
+		bson.M{"$lookup": bson.M{
+			"from":         "debates",
+			"localField":   "debateId",
+			"foreignField": "_id",
+			"as":           "_debate",
+		}},
+		bson.M{"$addFields": bson.M{
+			"authorUsername": bson.M{"$ifNull": bson.A{bson.M{"$arrayElemAt": bson.A{"$_author.username", 0}}, ""}},
+			"debateSlug":     bson.M{"$ifNull": bson.A{bson.M{"$arrayElemAt": bson.A{"$_debate.slug", 0}}, ""}},
+			"debateTitle":    bson.M{"$ifNull": bson.A{bson.M{"$arrayElemAt": bson.A{"$_debate.title", 0}}, ""}},
+		}},
+		bson.M{"$project": bson.M{"_author": 0, "_debate": 0}},
+	}
+
+	cursor, err := r.arguments.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var args []models.Argument
-	if err := cursor.All(ctx, &args); err != nil {
+	var results []models.FlaggedArgumentDetail
+	if err := cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
-
-	results := make([]models.FlaggedArgumentDetail, len(args))
-	for i, a := range args {
-		results[i] = models.FlaggedArgumentDetail{Argument: a}
-
-		// Enrich author username
-		var user models.User
-		if err := r.users.FindOne(ctx, bson.M{"_id": a.AuthorID}).Decode(&user); err == nil {
-			results[i].AuthorUsername = user.Username
-		}
-
-		// Enrich debate info
-		var debate models.Debate
-		if err := r.debates.FindOne(ctx, bson.M{"_id": a.DebateID}).Decode(&debate); err == nil {
-			results[i].DebateSlug = debate.Slug
-			results[i].DebateTitle = debate.Title
-		}
+	if results == nil {
+		results = []models.FlaggedArgumentDetail{}
 	}
-
 	return results, nil
 }
 
