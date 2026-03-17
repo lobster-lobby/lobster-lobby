@@ -84,6 +84,17 @@ func (c *Campaign) Validate() error {
 	return nil
 }
 
+// CalculateTrendingScore computes a trending score based on recent activity metrics.
+// Higher share/participant counts and recency increase the score.
+func (c *Campaign) CalculateTrendingScore() float64 {
+	ageHours := time.Since(c.CreatedAt).Hours()
+	if ageHours < 1 {
+		ageHours = 1
+	}
+	activity := float64(c.Metrics.TotalShares*3+c.Metrics.UniqueParticipants*2+c.Metrics.CommentCount)
+	return activity / ageHours
+}
+
 var slugNonAlphanumeric = regexp.MustCompile(`[^a-z0-9]+`)
 
 func GenerateSlug(title string) string {
@@ -91,7 +102,7 @@ func GenerateSlug(title string) string {
 	slug = slugNonAlphanumeric.ReplaceAllString(slug, "-")
 	slug = strings.Trim(slug, "-")
 	if len(slug) > 100 {
-		slug = slug[:100]
+		slug = strings.TrimRight(slug[:100], "-")
 	}
 	return slug
 }

@@ -97,8 +97,8 @@ func (h *CampaignHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "policy not found"})
 		return
 	}
-	if policy.Status != models.PolicyStatusActive {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "policy must be active to create a campaign"})
+	if policy.Status != models.PolicyStatusReadyForCampaign {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "policy must be ready_for_campaign to create a campaign"})
 		return
 	}
 
@@ -344,18 +344,29 @@ func (h *CampaignHandler) UpdateStatus(c *gin.Context) {
 		return
 	}
 
-	updatedCampaign, _ := h.campaigns.GetByID(c, idStr)
+	updatedCampaign, err := h.campaigns.GetByID(c, idStr)
+	if err != nil {
+		h.logger.Error("failed to fetch updated campaign", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch updated campaign"})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"campaign": updatedCampaign})
 }
 
 func (h *CampaignHandler) ListByPolicy(c *gin.Context) {
 	policyID := c.Param("id")
 
+	const maxCampaignsPerPolicy = 50
+
 	campaigns, err := h.campaigns.FindByPolicy(c, policyID)
 	if err != nil {
 		h.logger.Error("failed to list campaigns by policy", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list campaigns"})
 		return
+	}
+
+	if len(campaigns) > maxCampaignsPerPolicy {
+		campaigns = campaigns[:maxCampaignsPerPolicy]
 	}
 
 	c.JSON(http.StatusOK, gin.H{
