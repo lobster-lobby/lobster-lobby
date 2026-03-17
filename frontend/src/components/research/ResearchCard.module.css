@@ -162,6 +162,13 @@
   text-decoration: underline;
 }
 
+.badges {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-xs);
+  flex-shrink: 0;
+}
+
 .typeBadge {
   padding: var(--ll-space-xs) var(--ll-space-sm);
   border-radius: var(--ll-radius-full);

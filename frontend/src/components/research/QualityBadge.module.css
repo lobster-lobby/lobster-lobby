@@ -1,0 +1,27 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ll-space-xs) var(--ll-space-sm);
+  border-radius: var(--ll-radius-full);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+.high {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.good {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.fair {
+  background: #fefce8;
+  color: #a16207;
+  border-color: #fef08a;
+}

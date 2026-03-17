@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"math"
 	"net/url"
 	"strings"
 	"time"
@@ -34,6 +35,7 @@ func (r *ResearchRepository) EnsureIndexes(ctx context.Context) error {
 		{Keys: bson.D{{Key: "policyId", Value: 1}, {Key: "score", Value: -1}}},
 		{Keys: bson.D{{Key: "policyId", Value: 1}, {Key: "createdAt", Value: -1}}},
 		{Keys: bson.D{{Key: "policyId", Value: 1}, {Key: "citedBy", Value: -1}}},
+		{Keys: bson.D{{Key: "policyId", Value: 1}, {Key: "qualityScore", Value: -1}}},
 		{Keys: bson.D{{Key: "authorId", Value: 1}}},
 	})
 	return err
@@ -195,21 +197,25 @@ func (r *ResearchRepository) Update(ctx context.Context, researchID, authorID bs
 	return r.toResponse(ctx, &research, nil)
 }
 
-func (r *ResearchRepository) React(ctx context.Context, userID, researchID bson.ObjectID, value int) error {
+// ToggleVote handles vote toggle: same vote removes it, different vote changes it.
+func (r *ResearchRepository) ToggleVote(ctx context.Context, userID, researchID bson.ObjectID, value int) (int, error) {
 	// Get existing reaction
 	var existing models.Reaction
-	err := r.reactions.FindOne(ctx, bson.M{
+	existErr := r.reactions.FindOne(ctx, bson.M{
 		"userId":     userID,
 		"entityId":   researchID,
 		"entityType": "research",
 	}).Decode(&existing)
 
 	oldValue := 0
-	if err == nil {
+	if existErr == nil {
 		oldValue = existing.Value
 	}
 
-	if value == 0 {
+	// Compute new value using toggle logic
+	newValue, _ := ComputeResearchVoteToggle(oldValue, value)
+
+	if newValue == 0 {
 		// Remove reaction
 		_, _ = r.reactions.DeleteOne(ctx, bson.M{
 			"userId":     userID,
@@ -218,56 +224,104 @@ func (r *ResearchRepository) React(ctx context.Context, userID, researchID bson.
 		})
 	} else {
 		// Upsert reaction
-		_, err = r.reactions.UpdateOne(ctx,
+		_, err := r.reactions.UpdateOne(ctx,
 			bson.M{"userId": userID, "entityId": researchID, "entityType": "research"},
 			bson.M{"$set": bson.M{
 				"userId":     userID,
 				"entityId":   researchID,
 				"entityType": "research",
-				"value":      value,
+				"value":      newValue,
 				"createdAt":  time.Now().UTC(),
 			}},
 			options.UpdateOne().SetUpsert(true),
 		)
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
-	// Update research counters
+	// Update research vote counters
 	inc := bson.M{}
 	if oldValue == 1 {
 		inc["upvotes"] = -1
 	} else if oldValue == -1 {
 		inc["downvotes"] = -1
 	}
-	if value == 1 {
+	if newValue == 1 {
 		inc["upvotes"] = getOrDefault(inc, "upvotes") + 1
-	} else if value == -1 {
+	} else if newValue == -1 {
 		inc["downvotes"] = getOrDefault(inc, "downvotes") + 1
 	}
 
 	if len(inc) > 0 {
-		_, err = r.research.UpdateOne(ctx,
+		var updated models.Research
+		err := r.research.FindOneAndUpdate(ctx,
 			bson.M{"_id": researchID},
 			bson.M{"$inc": inc},
-		)
+			options.FindOneAndUpdate().SetReturnDocument(options.After),
+		).Decode(&updated)
 		if err != nil {
-			return err
+			return 0, err
 		}
-	}
-
-	// Recalculate score
-	var research models.Research
-	if err := r.research.FindOne(ctx, bson.M{"_id": researchID}).Decode(&research); err == nil {
-		score := research.Upvotes - research.Downvotes
+		score := updated.Upvotes - updated.Downvotes
+		qualityScore := ComputeQualityScore(updated.Upvotes, updated.Downvotes, updated.Sources)
 		_, _ = r.research.UpdateOne(ctx,
 			bson.M{"_id": researchID},
-			bson.M{"$set": bson.M{"score": score}},
+			bson.M{"$set": bson.M{"score": score, "qualityScore": qualityScore}},
 		)
 	}
 
-	return nil
+	return newValue, nil
+}
+
+// ComputeResearchVoteToggle returns the new vote value and delta for score updates.
+func ComputeResearchVoteToggle(existingVote, requestedVote int) (newVote, delta int) {
+	if existingVote == 0 {
+		return requestedVote, requestedVote
+	}
+	if existingVote == requestedVote {
+		return 0, -existingVote
+	}
+	return requestedVote, requestedVote - existingVote
+}
+
+// ComputeQualityScore computes a quality score from vote ratio and source credibility.
+// Range roughly 0-100. Higher is better.
+func ComputeQualityScore(upvotes, downvotes int, sources []models.Source) float64 {
+	total := upvotes + downvotes
+	if total == 0 {
+		// Base score from sources only
+		return sourceCredibility(sources) * 50
+	}
+
+	// Vote ratio component (0-1)
+	voteRatio := float64(upvotes) / float64(total)
+
+	// Source credibility component (0-1)
+	credibility := sourceCredibility(sources)
+
+	// Weighted: 60% vote ratio, 40% source credibility
+	// Scale by log(total+1) to reward engagement (capped)
+	engagement := math.Log2(float64(total) + 1)
+	if engagement > 5 {
+		engagement = 5
+	}
+
+	return (voteRatio*0.6 + credibility*0.4) * 20 * engagement
+}
+
+func sourceCredibility(sources []models.Source) float64 {
+	if len(sources) == 0 {
+		return 0
+	}
+	institutional := 0
+	for _, s := range sources {
+		if s.Institutional {
+			institutional++
+		}
+	}
+	// Base: having any sources = 0.3, institutional ratio adds up to 0.7
+	return 0.3 + 0.7*float64(institutional)/float64(len(sources))
 }
 
 func (r *ResearchRepository) GetUserVote(ctx context.Context, userID, entityID bson.ObjectID) int {
@@ -296,8 +350,9 @@ func (r *ResearchRepository) toResponse(ctx context.Context, research *models.Re
 		Upvotes:    research.Upvotes,
 		Downvotes:  research.Downvotes,
 		Score:      research.Score,
-		CitedBy:    research.CitedBy,
-		CreatedAt:  research.CreatedAt,
+		CitedBy:      research.CitedBy,
+		QualityScore: research.QualityScore,
+		CreatedAt:    research.CreatedAt,
 		UpdatedAt:  research.UpdatedAt,
 	}
 
@@ -324,6 +379,8 @@ func (r *ResearchRepository) getSortDoc(sort string) bson.D {
 		return bson.D{{Key: "createdAt", Value: -1}}
 	case "top":
 		return bson.D{{Key: "score", Value: -1}, {Key: "createdAt", Value: -1}}
+	case "quality":
+		return bson.D{{Key: "qualityScore", Value: -1}, {Key: "createdAt", Value: -1}}
 	case "most_cited":
 		return bson.D{{Key: "citedBy", Value: -1}, {Key: "createdAt", Value: -1}}
 	default:

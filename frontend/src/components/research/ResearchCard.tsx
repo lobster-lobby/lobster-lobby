@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { VoteButtons, UserBadge } from '../ui'
 import { SourceBadge } from './SourceBadge'
+import { QualityBadge } from './QualityBadge'
 import type { ResearchResponse } from '../../types/research'
 import styles from './ResearchCard.module.css'
 
@@ -38,11 +39,11 @@ export function ResearchCard({ research, onVote }: ResearchCardProps) {
   const userVote = research.userVote === 1 ? 'up' : research.userVote === -1 ? 'down' : null
 
   const handleUpvote = () => {
-    onVote(research.id, research.userVote === 1 ? 0 : 1)
+    onVote(research.id, 1)
   }
 
   const handleDownvote = () => {
-    onVote(research.id, research.userVote === -1 ? 0 : -1)
+    onVote(research.id, -1)
   }
 
   return (
@@ -50,9 +51,14 @@ export function ResearchCard({ research, onVote }: ResearchCardProps) {
       <div className={styles.header}>
         <div className={styles.titleRow}>
           <h3 className={styles.title}>{research.title}</h3>
-          <span className={[styles.typeBadge, styles[research.type]].join(' ')}>
-            {research.type}
-          </span>
+          <div className={styles.badges}>
+            <span className={[styles.typeBadge, styles[research.type]].join(' ')}>
+              {research.type}
+            </span>
+            {research.qualityScore > 0 && (
+              <QualityBadge score={research.qualityScore} />
+            )}
+          </div>
         </div>
 
         <div className={styles.meta}>
