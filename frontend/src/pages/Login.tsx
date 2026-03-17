@@ -80,9 +80,9 @@ export default function Login() {
               />
               Remember me
             </label>
-            <Link to="/forgot-password" className={styles.link}>
+            <span className={styles.link} style={{ opacity: 0.5, cursor: 'default' }}>
               Forgot password?
-            </Link>
+            </span>
           </div>
 
           <Button

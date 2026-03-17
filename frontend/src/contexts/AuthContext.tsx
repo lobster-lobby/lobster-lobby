@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom'
 interface User {
   id: string
   username: string
-  email: string
+  email?: string
 }
 
 interface AuthContextValue {
@@ -72,13 +72,6 @@ function userFromPayload(payload: AuthTokenPayload): User {
   }
 }
 
-// Cross-component reactivity (used by Header, etc.)
-const listeners = new Set<() => void>()
-
-export function notifyAuthChange() {
-  listeners.forEach((fn) => fn())
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -94,7 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (refreshTimerRef.current) {
       clearTimeout(refreshTimerRef.current)
     }
-    notifyAuthChange()
   }, [])
 
   const scheduleRefresh = useCallback(
@@ -123,7 +115,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (newPayload) {
             setUser(userFromPayload(newPayload))
             scheduleRefresh(data.token)
-            notifyAuthChange()
           }
         } catch {
           clearAuth()
@@ -141,7 +132,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (payload) {
         setUser(userFromPayload(payload))
         scheduleRefresh(token)
-        notifyAuthChange()
       }
     },
     [scheduleRefresh]
@@ -190,7 +180,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const originalFetch = window.fetch
     window.fetch = async (...args) => {
       const res = await originalFetch(...args)
-      if (res.status === 401 && accessToken) {
+      const url = typeof args[0] === 'string' ? args[0] : args[0] instanceof Request ? args[0].url : ''
+      if (res.status === 401 && accessToken && !url.includes('/api/auth/refresh')) {
         clearAuth()
         const currentPath = window.location.pathname
         if (currentPath !== '/login' && currentPath !== '/register') {
