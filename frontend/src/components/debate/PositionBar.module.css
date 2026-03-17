@@ -1,0 +1,56 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-xs);
+}
+
+.bar {
+  display: flex;
+  height: 8px;
+  border-radius: var(--ll-radius-full);
+  overflow: hidden;
+  background: var(--ll-border);
+}
+
+.segment {
+  transition: width 300ms ease;
+}
+
+.support {
+  background: var(--ll-support);
+}
+
+.oppose {
+  background: var(--ll-oppose);
+}
+
+.neutral {
+  background: var(--ll-neutral);
+}
+
+.empty {
+  background: var(--ll-border);
+}
+
+.labels {
+  display: flex;
+  gap: var(--ll-space-md);
+  justify-content: center;
+}
+
+.label {
+  font-size: 0.75rem;
+  color: var(--ll-text-secondary);
+}
+
+.supportLabel {
+  color: var(--ll-support);
+}
+
+.opposeLabel {
+  color: var(--ll-oppose);
+}
+
+.neutralLabel {
+  color: var(--ll-neutral);
+}

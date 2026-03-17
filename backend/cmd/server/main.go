@@ -66,6 +66,11 @@ func main() {
 		logger.Warn("failed to ensure reputation indexes", zap.Error(err))
 	}
 
+	commentRepo := repository.NewCommentRepository(mongo)
+	if err := commentRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure comment indexes", zap.Error(err))
+	}
+
 	activityRepo := repository.NewActivityRepository(mongo)
 
 	// Optionally rebuild search index from MongoDB on startup
@@ -94,6 +99,7 @@ func main() {
 	apiKeyHandler := handlers.NewAPIKeyHandler(apiKeyRepo, apiKeySvc)
 	dashboardHandler := handlers.NewDashboardHandler(userRepo, policyRepo, activityRepo, reputationSvc, logger)
 	searchHandler := handlers.NewSearchHandler(searchSvc, logger)
+	debateHandler := handlers.NewDebateHandler(commentRepo, policyRepo, logger, reputationSvc)
 
 	rateLimiter := middleware.NewRateLimiter()
 
@@ -130,6 +136,15 @@ func main() {
 			policies.DELETE("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.Delete)
 			policies.POST("/:id/bookmark", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.BookmarkToggle)
 			policies.POST("/:id/amendments", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), policyHandler.CreateAmendment)
+
+			// Debate routes
+			policies.POST("/:id/debate", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.CreateComment)
+			policies.GET("/:id/debate", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.ListComments)
+			policies.GET("/:id/debate/:commentId/replies", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.GetReplies)
+			policies.PATCH("/:id/debate/:commentId", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.EditComment)
+			policies.POST("/:id/debate/:commentId/react", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.ReactToComment)
+			policies.POST("/:id/stance", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.SetStance)
+			policies.GET("/:id/stance", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), debateHandler.GetStance)
 		}
 
 		api.GET("/search", searchHandler.Search)
