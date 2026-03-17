@@ -101,8 +101,9 @@ func (p *Policy) Validate() error {
 	if p.Status == "" {
 		p.Status = PolicyStatusActive
 	} else if p.Status != PolicyStatusActive && p.Status != PolicyStatusPassed &&
-		p.Status != PolicyStatusFailed && p.Status != PolicyStatusWithdrawn && p.Status != PolicyStatusArchived {
-		return errors.New("status must be one of: active, passed, failed, withdrawn, archived")
+		p.Status != PolicyStatusFailed && p.Status != PolicyStatusWithdrawn &&
+		p.Status != PolicyStatusArchived && p.Status != PolicyStatusReadyForCampaign {
+		return errors.New("status must be one of: active, passed, failed, withdrawn, archived, ready_for_campaign")
 	}
 
 	return nil

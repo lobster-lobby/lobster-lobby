@@ -356,4 +356,44 @@
   }
 }
 
+/* Campaign Readiness */
+.readinessSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-md);
+}
+
+.readinessItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-xs);
+}
+
+.readinessLabel {
+  font-size: 0.75rem;
+  color: var(--ll-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.readinessValue {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ll-text);
+}
+
+.progressBar {
+  height: 6px;
+  background: var(--ll-bg-elevated);
+  border-radius: var(--ll-radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--ll-primary);
+  border-radius: var(--ll-radius-full);
+  transition: width 300ms ease;
+}
+
 .comingSoon { color: var(--ll-text-muted, #888); font-size: 0.875rem; padding: var(--ll-space-sm, 8px) 0; }
