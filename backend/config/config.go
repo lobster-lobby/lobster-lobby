@@ -12,6 +12,7 @@ type Config struct {
 	MeilisearchURL  string
 	MeilisearchKey  string
 	RebuildIndex    bool
+	StaticDir       string
 }
 
 func Load() *Config {
@@ -25,6 +26,7 @@ func Load() *Config {
 		MeilisearchURL:  getEnv("MEILISEARCH_URL", "http://localhost:7700"),
 		MeilisearchKey:  getEnv("MEILISEARCH_KEY", ""),
 		RebuildIndex:    os.Getenv("REBUILD_SEARCH_INDEX") == "true",
+		StaticDir:       getEnv("STATIC_DIR", ""),
 	}
 }
 
