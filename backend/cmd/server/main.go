@@ -133,6 +133,13 @@ func main() {
 	repSvc := services.NewRepresentativeService(repRepo, cfg.GoogleCivicAPIKey)
 	repHandler := handlers.NewRepresentativeHandler(repSvc)
 
+	// Campaign assets
+	assetRepo := repository.NewAssetRepository(mongo)
+	if err := assetRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure asset indexes", zap.Error(err))
+	}
+	assetHandler := handlers.NewAssetHandler(assetRepo, campaignRepo, userRepo, logger)
+
 	rateLimiter := middleware.NewRateLimiter()
 
 	if cfg.Env != "development" {
@@ -206,6 +213,18 @@ func main() {
 			campaigns.GET("/:id", campaignHandler.Get)
 			campaigns.PATCH("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignHandler.Update)
 			campaigns.PATCH("/:id/status", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignHandler.UpdateStatus)
+
+			// Campaign assets
+			campaigns.POST("/:id/assets", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.CreateTextAsset)
+			campaigns.POST("/:id/assets/upload", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.UploadAsset)
+			campaigns.GET("/:id/assets", assetHandler.List)
+			campaigns.GET("/:id/assets/:assetId", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.Get)
+			campaigns.GET("/:id/assets/:assetId/file", assetHandler.ServeFile)
+			campaigns.POST("/:id/assets/:assetId/download", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.Download)
+			campaigns.POST("/:id/assets/:assetId/vote", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.Vote)
+			campaigns.POST("/:id/assets/:assetId/share", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.Share)
+			campaigns.PATCH("/:id/assets/:assetId", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.Update)
+			campaigns.DELETE("/:id/assets/:assetId", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.Delete)
 		}
 
 		api.GET("/search", searchHandler.Search)
