@@ -70,6 +70,13 @@ export function Header() {
                     Bookmarks
                   </Link>
                   <Link
+                    to="/representatives"
+                    className={styles.dropdownItem}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Representatives
+                  </Link>
+                  <Link
                     to="/settings"
                     className={styles.dropdownItem}
                     onClick={() => setMenuOpen(false)}
