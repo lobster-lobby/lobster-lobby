@@ -82,8 +82,8 @@ export function notifyAuthChange() {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const refreshTimerRef = useRef<ReturnType<typeof setTimeout>>()
-  const navigateRef = useRef<ReturnType<typeof useNavigate>>()
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const navigateRef = useRef<ReturnType<typeof useNavigate>>(undefined)
 
   const navigate = useNavigate()
   navigateRef.current = navigate
