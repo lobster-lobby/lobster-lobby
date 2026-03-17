@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth, getAccessToken } from '../../hooks/useAuth'
 import { Card, TabNav, Spinner, EmptyState, Badge } from '../ui'
 import PositionBar from '../debate/PositionBar'
+import CommunitySummary from '../debate/CommunitySummary'
 import CommentComposer from '../debate/CommentComposer'
 import DebateComment from '../debate/DebateComment'
 import type { Comment, Position, DebateResponse } from '../../types/debate'
@@ -111,6 +112,8 @@ export default function DebateTab({ policyId }: DebateTabProps) {
           <PositionBar support={positions.support} oppose={positions.oppose} neutral={positions.neutral} />
         </div>
       </Card>
+
+      <CommunitySummary policyId={policyId} />
 
       <CommentComposer policyId={policyId} onCommentCreated={handleCommentCreated} />
 
