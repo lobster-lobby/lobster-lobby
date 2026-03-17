@@ -42,3 +42,21 @@ export type { PositionIndicatorProps } from './PositionIndicator'
 
 export { Skeleton } from './Skeleton'
 export type { SkeletonProps } from './Skeleton'
+
+export {
+  ThumbsUpIcon,
+  ChatBubbleIcon,
+  SearchIcon,
+  DebateIcon,
+  UsersIcon,
+  TrendUpIcon,
+  BookOpenIcon,
+  ShieldIcon,
+  UserIcon,
+  CpuIcon,
+  VoteIcon,
+  ArrowDownIcon,
+  EmptyBoxIcon,
+  EmptySearchIcon,
+  EmptyDocIcon,
+} from './Icons'

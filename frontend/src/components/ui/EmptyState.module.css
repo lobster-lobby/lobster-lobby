@@ -7,6 +7,18 @@
   text-align: center;
 }
 
+.illustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--ll-radius-lg);
+  background: var(--ll-bg-elevated);
+  color: var(--ll-text-muted);
+  margin-bottom: var(--ll-space-lg);
+}
+
 .heading {
   font-size: 1.25rem;
   font-weight: 600;

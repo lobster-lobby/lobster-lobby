@@ -1,3 +1,4 @@
+import { ThumbsUpIcon, ChatBubbleIcon } from './ui/Icons'
 import './PreviewFeed.css'
 
 const mockPolicies = [
@@ -63,8 +64,14 @@ export default function PreviewFeed() {
                 <LoginPrompt action="comment" />
                 <LoginPrompt action="react" />
                 <div className="preview-card-stats">
-                  <span>👍 {policy.endorsements.toLocaleString()}</span>
-                  <span>💬 {policy.comments.toLocaleString()}</span>
+                  <span className="preview-stat">
+                    <ThumbsUpIcon size={14} />
+                    {policy.endorsements.toLocaleString()}
+                  </span>
+                  <span className="preview-stat">
+                    <ChatBubbleIcon size={14} />
+                    {policy.comments.toLocaleString()}
+                  </span>
                 </div>
               </div>
             </div>
