@@ -104,9 +104,13 @@ func (r *NominationRepository) UpdateStatus(ctx context.Context, policyID bson.O
 	return err
 }
 
-// CountDebateComments returns the total number of debate comments for a policy.
+// CountDebateComments returns the total number of top-level debate comments for a policy.
+// Replies (documents with a parentId) are excluded.
 func (r *NominationRepository) CountDebateComments(ctx context.Context, policyID bson.ObjectID) (int64, error) {
-	return r.comments.CountDocuments(ctx, bson.M{"policyId": policyID})
+	return r.comments.CountDocuments(ctx, bson.M{
+		"policyId": policyID,
+		"parentId": bson.M{"$exists": false},
+	})
 }
 
 // CountResearchSubmissions returns the total number of research submissions for a policy.

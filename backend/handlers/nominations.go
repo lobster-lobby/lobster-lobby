@@ -213,6 +213,16 @@ func (h *NominationHandler) Endorse(c *gin.Context) {
 }
 
 func (h *NominationHandler) transitionToReadyForCampaign(ctx context.Context, policyID bson.ObjectID) {
+	// Idempotency check: skip if the policy is already ready_for_campaign.
+	policy, err := h.policies.FindByID(ctx, policyID)
+	if err != nil {
+		h.logger.Error("transitionToReadyForCampaign: failed to fetch policy", zap.Error(err))
+		return
+	}
+	if policy != nil && policy.Status == models.PolicyStatusReadyForCampaign {
+		return
+	}
+
 	if err := h.nominations.UpdateStatus(ctx, policyID, models.NominationStatusApproved); err != nil {
 		h.logger.Error("failed to update nomination status", zap.Error(err))
 		return
@@ -243,10 +253,25 @@ func (h *NominationHandler) CampaignReadiness(c *gin.Context) {
 		return
 	}
 
-	debateCount, _ := h.nominations.CountDebateComments(c, policyID)
-	researchCount, _ := h.nominations.CountResearchSubmissions(c, policyID)
+	debateCount, err := h.nominations.CountDebateComments(c, policyID)
+	if err != nil {
+		h.logger.Error("failed to count debate comments", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to count debate comments"})
+		return
+	}
+	researchCount, err := h.nominations.CountResearchSubmissions(c, policyID)
+	if err != nil {
+		h.logger.Error("failed to count research submissions", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to count research submissions"})
+		return
+	}
 
-	nomination, _ := h.nominations.FindByPolicyID(c, policyID)
+	nomination, err := h.nominations.FindByPolicyID(c, policyID)
+	if err != nil {
+		h.logger.Error("failed to find nomination", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to find nomination"})
+		return
+	}
 
 	endorsementCount := 0
 	nominationStatus := ""
