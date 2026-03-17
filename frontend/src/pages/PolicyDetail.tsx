@@ -64,7 +64,9 @@ export default function PolicyDetail() {
   const [bookmarkLoading, setBookmarkLoading] = useState(false)
   const [toast, setToast] = useState<{ message: string; variant: 'success' | 'error' | 'info' } | null>(null)
 
-  const activeTab = searchParams.get('tab') || 'debate'
+  const VALID_TABS = TABS.map((t) => t.id)
+  const tabParam = searchParams.get('tab')
+  const activeTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'debate'
 
   useEffect(() => {
     const fetchPolicy = async () => {
@@ -93,7 +95,26 @@ export default function PolicyDetail() {
 
         const data = await res.json()
         setPolicy(data.policy)
+        setIsBookmarked(data.policy.isBookmarked ?? data.isBookmarked ?? false)
         document.title = `${data.policy.title} | Lobster Lobby`
+
+        // SEO meta tags
+        const description = (data.policy.summary || '').slice(0, 160)
+        const url = window.location.href
+        const setMeta = (name: string, content: string, prop = false) => {
+          const attr = prop ? 'property' : 'name'
+          let el = document.head.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null
+          if (!el) {
+            el = document.createElement('meta')
+            el.setAttribute(attr, name)
+            document.head.appendChild(el)
+          }
+          el.setAttribute('content', content)
+        }
+        setMeta('description', description)
+        setMeta('og:title', `${data.policy.title} | Lobster Lobby`, true)
+        setMeta('og:description', description, true)
+        setMeta('og:url', url, true)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Something went wrong')
       } finally {
@@ -102,6 +123,10 @@ export default function PolicyDetail() {
     }
 
     fetchPolicy()
+
+    return () => {
+      document.title = 'Lobster Lobby'
+    }
   }, [slug])
 
   const handleTabChange = (tabId: string) => {
@@ -362,19 +387,11 @@ export default function PolicyDetail() {
         </Card>
 
         <Card header={<h3>Related Policies</h3>}>
-          <div className={styles.placeholderList}>
-            <Skeleton height={60} />
-            <Skeleton height={60} />
-            <Skeleton height={60} />
-          </div>
+          <p className={styles.comingSoon}>Coming soon</p>
         </Card>
 
         <Card header={<h3>Top Contributors</h3>}>
-          <div className={styles.placeholderList}>
-            <Skeleton height={40} />
-            <Skeleton height={40} />
-            <Skeleton height={40} />
-          </div>
+          <p className={styles.comingSoon}>Coming soon</p>
         </Card>
 
         <Card header={<h3>Tags</h3>}>

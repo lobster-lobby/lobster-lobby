@@ -355,3 +355,5 @@
     left: var(--ll-space-md);
   }
 }
+
+.comingSoon { color: var(--ll-text-muted, #888); font-size: 0.875rem; padding: var(--ll-space-sm, 8px) 0; }
