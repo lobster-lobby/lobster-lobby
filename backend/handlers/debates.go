@@ -133,11 +133,14 @@ func (h *DebatesHandler) GetDebate(c *gin.Context) {
 		sort = "top"
 	}
 
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
+	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+
 	var arguments []models.ArgumentResponse
 	if sort == "controversial" {
 		arguments, err = h.debates.ListArgumentsControversial(c, debate.ID)
 	} else {
-		arguments, err = h.debates.ListArguments(c, debate.ID, sort)
+		arguments, err = h.debates.ListArguments(c, debate.ID, sort, limit, offset)
 	}
 	if err != nil {
 		h.logger.Error("failed to list arguments", zap.Error(err))
@@ -261,6 +264,21 @@ func (h *DebatesHandler) VoteOnArgument(c *gin.Context) {
 		return
 	}
 
+	// Look up argument to validate it belongs to this debate and prevent self-voting.
+	argument, err := h.debates.GetArgumentByID(c, argID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "argument not found"})
+		return
+	}
+	if argument.DebateID != debate.ID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "argument does not belong to this debate"})
+		return
+	}
+	if userID == argument.AuthorID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot vote on your own argument"})
+		return
+	}
+
 	var req struct {
 		Value int `json:"value"`
 	}
@@ -282,25 +300,20 @@ func (h *DebatesHandler) VoteOnArgument(c *gin.Context) {
 		return
 	}
 
-	// Award reputation to the argument author
-	go func() {
-		args, listErr := h.debates.ListArguments(context.Background(), debate.ID, "top")
-		if listErr != nil {
-			return
-		}
-		for _, a := range args {
-			if a.ID == argID {
-				action := models.ActionUpvoteReceived
-				if req.Value == -1 {
-					action = models.ActionDownvoteReceived
-				}
-				if err := h.reputationSvc.AwardPoints(context.Background(), a.AuthorID, action, argID.Hex(), "argument"); err != nil {
-					h.logger.Warn("failed to award vote reputation", zap.Error(err))
-				}
-				break
+	// Award reputation to the argument author.
+	// Use newValue (the resolved toggle result) — skip if vote was removed (0).
+	if newValue != 0 {
+		authorID := argument.AuthorID
+		go func() {
+			action := models.ActionUpvoteReceived
+			if newValue == -1 {
+				action = models.ActionDownvoteReceived
 			}
-		}
-	}()
+			if err := h.reputationSvc.AwardPoints(context.Background(), authorID, action, argID.Hex(), "argument"); err != nil {
+				h.logger.Warn("failed to award vote reputation", zap.Error(err))
+			}
+		}()
+	}
 
 	c.JSON(http.StatusOK, gin.H{"vote": newValue})
 }

@@ -148,13 +148,27 @@ func (r *DebateRepository) CreateArgument(ctx context.Context, arg *models.Argum
 	return resp, nil
 }
 
+// GetArgumentByID returns a single argument by its ID.
+func (r *DebateRepository) GetArgumentByID(ctx context.Context, id bson.ObjectID) (*models.Argument, error) {
+	var arg models.Argument
+	err := r.arguments.FindOne(ctx, bson.M{"_id": id}).Decode(&arg)
+	if err != nil {
+		return nil, err
+	}
+	return &arg, nil
+}
+
 // ListArguments returns arguments for a debate, sorted by the specified method.
-func (r *DebateRepository) ListArguments(ctx context.Context, debateID bson.ObjectID, sort string) ([]models.ArgumentResponse, error) {
+// limit/offset control pagination; if limit <= 0 a default of 50 is used.
+func (r *DebateRepository) ListArguments(ctx context.Context, debateID bson.ObjectID, sort string, limit, offset int) ([]models.ArgumentResponse, error) {
+	if limit <= 0 {
+		limit = 50
+	}
 	sortDoc := r.getArgumentSortDoc(sort)
 
 	cursor, err := r.arguments.Find(ctx,
 		bson.M{"debateId": debateID},
-		options.Find().SetSort(sortDoc),
+		options.Find().SetSort(sortDoc).SetLimit(int64(limit)).SetSkip(int64(offset)),
 	)
 	if err != nil {
 		return nil, err
@@ -229,21 +243,20 @@ func (r *DebateRepository) ToggleVote(ctx context.Context, userID, argumentID, d
 		inc["downvotes"] = getOrDefault(inc, "downvotes") + 1
 	}
 
+	_ = delta // used for clarity; score derived from returned document below
+
 	if len(inc) > 0 {
-		_, err = r.arguments.UpdateOne(ctx,
+		// Atomically increment counters and return the updated document to compute score.
+		var updated models.Argument
+		err = r.arguments.FindOneAndUpdate(ctx,
 			bson.M{"_id": argumentID},
 			bson.M{"$inc": inc},
-		)
+			options.FindOneAndUpdate().SetReturnDocument(options.After),
+		).Decode(&updated)
 		if err != nil {
 			return 0, err
 		}
-	}
-
-	// Update net score
-	_ = delta // delta used for consistency check, score recomputed from DB
-	var arg models.Argument
-	if err := r.arguments.FindOne(ctx, bson.M{"_id": argumentID}).Decode(&arg); err == nil {
-		score := arg.Upvotes - arg.Downvotes
+		score := updated.Upvotes - updated.Downvotes
 		_, _ = r.arguments.UpdateOne(ctx,
 			bson.M{"_id": argumentID},
 			bson.M{"$set": bson.M{"score": score}},
