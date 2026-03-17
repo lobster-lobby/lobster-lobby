@@ -2,7 +2,7 @@ import type { InputHTMLAttributes } from 'react'
 import { forwardRef } from 'react'
 import styles from './SearchBar.module.css'
 
-export interface SearchBarProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {}
+export type SearchBarProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>
 
 export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
   ({ className = '', ...props }, ref) => {
