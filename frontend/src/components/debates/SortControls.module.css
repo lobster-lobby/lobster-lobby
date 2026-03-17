@@ -1,0 +1,38 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-sm);
+  flex-wrap: wrap;
+}
+
+.label {
+  font-size: 0.8125rem;
+  color: var(--ll-text-muted);
+  font-weight: 500;
+}
+
+.buttons {
+  display: flex;
+  gap: var(--ll-space-xs);
+}
+
+.btn {
+  padding: var(--ll-space-xs) var(--ll-space-sm);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-full);
+  background: var(--ll-bg-card);
+  color: var(--ll-text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.btn:hover {
+  border-color: var(--ll-text-muted);
+}
+
+.active {
+  background: var(--ll-primary-tint);
+  border-color: var(--ll-primary);
+  color: var(--ll-primary);
+}

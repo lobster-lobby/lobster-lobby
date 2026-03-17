@@ -134,7 +134,17 @@ func (h *DebateHandler) ListComments(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	perPage, _ := strconv.Atoi(c.DefaultQuery("perPage", "20"))
 
-	comments, total, positions, err := h.comments.FindByPolicy(c, policyID, sort, position, page, perPage)
+	var (
+		comments  []models.CommentResponse
+		total     int64
+		positions map[string]int
+	)
+
+	if sort == "controversial" {
+		comments, total, positions, err = h.comments.FindByPolicyControversial(c, policyID, position, page, perPage)
+	} else {
+		comments, total, positions, err = h.comments.FindByPolicy(c, policyID, sort, position, page, perPage)
+	}
 	if err != nil {
 		h.logger.Error("failed to list comments", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list comments"})

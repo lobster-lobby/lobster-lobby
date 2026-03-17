@@ -16,6 +16,7 @@ const sortTabs = [
   { id: 'best', label: 'Best' },
   { id: 'newest', label: 'Newest' },
   { id: 'top', label: 'Top' },
+  { id: 'controversial', label: 'Controversial' },
   { id: 'discussed', label: 'Most Discussed' },
 ]
 
