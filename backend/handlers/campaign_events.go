@@ -4,10 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.uber.org/zap"
 
-	"github.com/lobster-lobby/lobster-lobby/models"
 	"github.com/lobster-lobby/lobster-lobby/repository"
 )
 
@@ -33,7 +31,7 @@ func NewCampaignEventHandler(
 func (h *CampaignEventHandler) List(c *gin.Context) {
 	idOrSlug := c.Param("id")
 
-	campaign, err := h.resolveCampaign(c, idOrSlug)
+	campaign, err := ResolveCampaign(c, h.campaigns, idOrSlug)
 	if err != nil {
 		h.logger.Error("failed to get campaign", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get campaign"})
@@ -58,7 +56,7 @@ func (h *CampaignEventHandler) List(c *gin.Context) {
 func (h *CampaignEventHandler) GetActivity(c *gin.Context) {
 	idOrSlug := c.Param("id")
 
-	campaign, err := h.resolveCampaign(c, idOrSlug)
+	campaign, err := ResolveCampaign(c, h.campaigns, idOrSlug)
 	if err != nil {
 		h.logger.Error("failed to get campaign", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get campaign"})
@@ -90,12 +88,4 @@ func (h *CampaignEventHandler) GetActivity(c *gin.Context) {
 		"recentEvents":  recentEvents,
 		"metrics":       campaign.Metrics,
 	})
-}
-
-// resolveCampaign looks up a campaign by ID or slug.
-func (h *CampaignEventHandler) resolveCampaign(c *gin.Context, idOrSlug string) (*models.Campaign, error) {
-	if oid, parseErr := bson.ObjectIDFromHex(idOrSlug); parseErr == nil {
-		return h.campaigns.GetByID(c, oid.Hex())
-	}
-	return h.campaigns.FindBySlug(c, idOrSlug)
 }

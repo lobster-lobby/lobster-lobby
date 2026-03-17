@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { TabNav, Button, Badge, UserBadge, Toast, Spinner, Card, Skeleton } from '../components/ui'
 import type { Policy } from '../components/PolicyCard'
 import { useAuth, getAccessToken } from '../hooks/useAuth'
+import { relativeTime } from '../utils/time'
 import styles from './PolicyDetail.module.css'
 
 const TYPE_CONFIG = {
@@ -25,23 +26,6 @@ const ResearchTab = lazy(() => import('../components/tabs/ResearchTab'))
 const RepresentativesTab = lazy(() => import('../components/tabs/RepresentativesTab'))
 const PollsTab = lazy(() => import('../components/tabs/PollsTab'))
 const DraftTab = lazy(() => import('../components/tabs/DraftTab'))
-
-function relativeTime(dateStr: string): string {
-  const now = Date.now()
-  const then = new Date(dateStr).getTime()
-  const seconds = Math.floor((now - then) / 1000)
-
-  if (seconds < 60) return 'just now'
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days}d ago`
-  const months = Math.floor(days / 30)
-  if (months < 12) return `${months}mo ago`
-  return `${Math.floor(months / 12)}y ago`
-}
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-US', {

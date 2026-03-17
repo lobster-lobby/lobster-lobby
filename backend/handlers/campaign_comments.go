@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -40,7 +42,7 @@ func NewCampaignCommentHandler(
 func (h *CampaignCommentHandler) List(c *gin.Context) {
 	idOrSlug := c.Param("id")
 
-	campaign, err := h.resolveCampaign(c, idOrSlug)
+	campaign, err := ResolveCampaign(c, h.campaigns, idOrSlug)
 	if err != nil {
 		h.logger.Error("failed to get campaign", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get campaign"})
@@ -88,7 +90,7 @@ func (h *CampaignCommentHandler) List(c *gin.Context) {
 func (h *CampaignCommentHandler) Create(c *gin.Context) {
 	idOrSlug := c.Param("id")
 
-	campaign, err := h.resolveCampaign(c, idOrSlug)
+	campaign, err := ResolveCampaign(c, h.campaigns, idOrSlug)
 	if err != nil {
 		h.logger.Error("failed to get campaign", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get campaign"})
@@ -146,6 +148,11 @@ func (h *CampaignCommentHandler) Create(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "parent comment belongs to different campaign"})
 			return
 		}
+		// Enforce single level of nesting - cannot reply to a reply
+		if parent.ParentID != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "cannot reply to a reply"})
+			return
+		}
 		comment.ParentID = &parentOID
 	}
 
@@ -160,11 +167,14 @@ func (h *CampaignCommentHandler) Create(c *gin.Context) {
 		return
 	}
 
-	// Update campaign comment count
+	// Update campaign comment count asynchronously
+	campaignID := campaign.ID.Hex()
 	go func() {
-		count, err := h.comments.CountByCampaign(c.Request.Context(), campaign.ID.Hex())
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		count, err := h.comments.CountByCampaign(ctx, campaignID)
 		if err == nil {
-			h.campaigns.Update(c.Request.Context(), campaign.ID.Hex(), bson.M{
+			h.campaigns.Update(ctx, campaignID, bson.M{
 				"metrics.commentCount": int(count),
 			})
 		}
@@ -175,7 +185,15 @@ func (h *CampaignCommentHandler) Create(c *gin.Context) {
 
 // Update handles PUT /api/campaigns/:slug/comments/:id
 func (h *CampaignCommentHandler) Update(c *gin.Context) {
+	idOrSlug := c.Param("id")
 	commentID := c.Param("commentId")
+
+	// Resolve campaign to verify comment belongs to it
+	campaign, err := ResolveCampaign(c, h.campaigns, idOrSlug)
+	if err != nil || campaign == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "campaign not found"})
+		return
+	}
 
 	comment, err := h.comments.GetByID(c, commentID)
 	if err != nil {
@@ -184,6 +202,12 @@ func (h *CampaignCommentHandler) Update(c *gin.Context) {
 		return
 	}
 	if comment == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
+		return
+	}
+
+	// Verify comment belongs to this campaign
+	if comment.CampaignID != campaign.ID {
 		c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
 		return
 	}
@@ -233,7 +257,7 @@ func (h *CampaignCommentHandler) Delete(c *gin.Context) {
 	idOrSlug := c.Param("id")
 	commentID := c.Param("commentId")
 
-	campaign, err := h.resolveCampaign(c, idOrSlug)
+	campaign, err := ResolveCampaign(c, h.campaigns, idOrSlug)
 	if err != nil || campaign == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "campaign not found"})
 		return
@@ -246,6 +270,12 @@ func (h *CampaignCommentHandler) Delete(c *gin.Context) {
 		return
 	}
 	if comment == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
+		return
+	}
+
+	// Verify comment belongs to this campaign
+	if comment.CampaignID != campaign.ID {
 		c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
 		return
 	}
@@ -273,11 +303,15 @@ func (h *CampaignCommentHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	// Update campaign comment count
+	// Update campaign comment count asynchronously
+	// Use background context since request context may be cancelled after response
+	campaignID := campaign.ID.Hex()
 	go func() {
-		count, err := h.comments.CountByCampaign(c.Request.Context(), campaign.ID.Hex())
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		count, err := h.comments.CountByCampaign(ctx, campaignID)
 		if err == nil {
-			h.campaigns.Update(c.Request.Context(), campaign.ID.Hex(), bson.M{
+			h.campaigns.Update(ctx, campaignID, bson.M{
 				"metrics.commentCount": int(count),
 			})
 		}
@@ -288,7 +322,15 @@ func (h *CampaignCommentHandler) Delete(c *gin.Context) {
 
 // Vote handles POST /api/campaigns/:slug/comments/:id/vote
 func (h *CampaignCommentHandler) Vote(c *gin.Context) {
+	idOrSlug := c.Param("id")
 	commentID := c.Param("commentId")
+
+	// Resolve campaign to verify comment belongs to it
+	campaign, err := ResolveCampaign(c, h.campaigns, idOrSlug)
+	if err != nil || campaign == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "campaign not found"})
+		return
+	}
 
 	comment, err := h.comments.GetByID(c, commentID)
 	if err != nil {
@@ -297,6 +339,12 @@ func (h *CampaignCommentHandler) Vote(c *gin.Context) {
 		return
 	}
 	if comment == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
+		return
+	}
+
+	// Verify comment belongs to this campaign
+	if comment.CampaignID != campaign.ID {
 		c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
 		return
 	}
@@ -331,12 +379,4 @@ func (h *CampaignCommentHandler) Vote(c *gin.Context) {
 		"comment":  updatedComment,
 		"userVote": newVote,
 	})
-}
-
-// resolveCampaign looks up a campaign by ID or slug.
-func (h *CampaignCommentHandler) resolveCampaign(c *gin.Context, idOrSlug string) (*models.Campaign, error) {
-	if oid, parseErr := bson.ObjectIDFromHex(idOrSlug); parseErr == nil {
-		return h.campaigns.GetByID(c, oid.Hex())
-	}
-	return h.campaigns.FindBySlug(c, idOrSlug)
 }
