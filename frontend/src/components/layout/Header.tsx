@@ -1,10 +1,25 @@
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { SearchBar } from '../ui'
 import styles from './Header.module.css'
 
 export function Header() {
-  const { isAuthenticated, user } = useAuth()
+  const { user, logout } = useAuth()
+  const isAuthenticated = !!user
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [menuOpen])
 
   return (
     <header className={styles.header}>
@@ -20,11 +35,60 @@ export function Header() {
 
         <nav className={styles.nav}>
           {isAuthenticated ? (
-            <Link to="/dashboard" className={styles.avatar}>
-              <span className={styles.avatarText}>
-                {user?.username?.charAt(0).toUpperCase() || 'U'}
-              </span>
-            </Link>
+            <div className={styles.userMenu} ref={menuRef}>
+              <button
+                className={styles.avatar}
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-expanded={menuOpen}
+                aria-haspopup="true"
+              >
+                <span className={styles.avatarText}>
+                  {user?.username?.charAt(0).toUpperCase() || 'U'}
+                </span>
+              </button>
+              {menuOpen && (
+                <div className={styles.dropdown}>
+                  <div className={styles.dropdownUser}>
+                    <span className={styles.dropdownUsername}>{user?.username}</span>
+                    {user?.email && (
+                      <span className={styles.dropdownEmail}>{user.email}</span>
+                    )}
+                  </div>
+                  <div className={styles.dropdownDivider} />
+                  <Link
+                    to="/dashboard"
+                    className={styles.dropdownItem}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/bookmarks"
+                    className={styles.dropdownItem}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Bookmarks
+                  </Link>
+                  <Link
+                    to="/settings"
+                    className={styles.dropdownItem}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Settings
+                  </Link>
+                  <div className={styles.dropdownDivider} />
+                  <button
+                    className={styles.dropdownItem}
+                    onClick={() => {
+                      setMenuOpen(false)
+                      logout()
+                    }}
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <div className={styles.authLinks}>
               <Link to="/login" className={styles.link}>

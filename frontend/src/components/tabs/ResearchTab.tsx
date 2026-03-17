@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth, getAccessToken } from '../../hooks/useAuth'
 import { Card, Button, Spinner, EmptyState } from '../ui'
 import { ResearchCard } from '../research/ResearchCard'
 import { ResearchSubmit } from '../research/ResearchSubmit'
@@ -40,7 +40,7 @@ export default function ResearchTab({ policyId }: ResearchTabProps) {
   const fetchResearch = useCallback(async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('ll_token')
+      const token = getAccessToken()
       const headers: HeadersInit = {}
       if (token) headers['Authorization'] = `Bearer ${token}`
 
@@ -96,7 +96,7 @@ export default function ResearchTab({ policyId }: ResearchTabProps) {
     )
 
     try {
-      const token = localStorage.getItem('ll_token')
+      const token = getAccessToken()
       await fetch(`/api/policies/${policyId}/research/${id}/react`, {
         method: 'POST',
         headers: {

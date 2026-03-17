@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './contexts/AuthContext'
+import { RequireAuth } from './components/RequireAuth'
 import { AppLayout } from './layouts/AppLayout'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -18,23 +20,53 @@ import './styles/global.css'
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/feed" element={<PublicFeed />} />
-        <Route element={<AppLayout />}>
-          <Route path="/policies/:slug" element={<PolicyDetail />} />
-          <Route path="/policies/new" element={<CreatePolicy />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/bookmarks" element={<Bookmarks />} />
-          <Route path="/representatives" element={<Representatives />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/u/:username" element={<UserProfile />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/feed" element={<PublicFeed />} />
+          <Route element={<AppLayout />}>
+            <Route path="/policies/:slug" element={<PolicyDetail />} />
+            <Route
+              path="/policies/new"
+              element={
+                <RequireAuth>
+                  <CreatePolicy />
+                </RequireAuth>
+              }
+            />
+            <Route path="/search" element={<Search />} />
+            <Route
+              path="/bookmarks"
+              element={
+                <RequireAuth>
+                  <Bookmarks />
+                </RequireAuth>
+              }
+            />
+            <Route path="/representatives" element={<Representatives />} />
+            <Route
+              path="/dashboard"
+              element={
+                <RequireAuth>
+                  <Dashboard />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <RequireAuth>
+                  <Settings />
+                </RequireAuth>
+              }
+            />
+            <Route path="/u/:username" element={<UserProfile />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   )
 }
