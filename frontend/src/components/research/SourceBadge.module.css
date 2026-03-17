@@ -1,0 +1,31 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ll-space-xs);
+  padding: var(--ll-space-xs) var(--ll-space-sm);
+  border-radius: var(--ll-radius-sm);
+  font-size: 0.75rem;
+  background: var(--ll-bg-elevated);
+  color: var(--ll-text-secondary);
+  border: 1px solid var(--ll-border);
+}
+
+.institutional {
+  background: var(--ll-primary-tint);
+  border-color: var(--ll-primary);
+  color: var(--ll-primary);
+}
+
+.icon {
+  font-size: 0.625rem;
+}
+
+.domain {
+  font-weight: 500;
+}
+
+.label {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
