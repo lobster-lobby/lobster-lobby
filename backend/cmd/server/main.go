@@ -163,6 +163,12 @@ func main() {
 	debatesHandler := handlers.NewDebatesHandler(debateRepo, userRepo, logger, reputationSvc)
 	moderationHandler := handlers.NewModerationHandler(debateRepo, userRepo, logger)
 
+	crossRefRepo := repository.NewCrossReferenceRepository(mongo)
+	if err := crossRefRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure cross-reference indexes", zap.Error(err))
+	}
+	crossRefHandler := handlers.NewCrossReferenceHandler(crossRefRepo, logger)
+
 	rateLimiter := middleware.NewRateLimiter()
 
 	if cfg.Env != "development" {
@@ -281,6 +287,15 @@ func main() {
 		{
 			admin.GET("/moderation/queue", moderationHandler.GetQueue)
 			admin.POST("/moderation/:id/action", moderationHandler.TakeAction)
+		}
+
+		// Cross-references
+		crossRefs := api.Group("/cross-references")
+		crossRefs.Use(middleware.RateLimit(rateLimiter))
+		{
+			crossRefs.POST("", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), crossRefHandler.Create)
+			crossRefs.GET("", crossRefHandler.List)
+			crossRefs.DELETE("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), crossRefHandler.Delete)
 		}
 
 		api.GET("/search", searchHandler.Search)

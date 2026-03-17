@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { CrossReferences } from '../components/CrossReferences'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Card, Spinner, EmptyState } from '../components/ui'
 import DebateArgument from '../components/debates/DebateArgument'
@@ -140,6 +141,7 @@ export default function DebateDetail() {
           </div>
         </div>
       )}
+      {debate && <CrossReferences entityType="debate" entityId={debate.id} />}
     </div>
   )
 }
