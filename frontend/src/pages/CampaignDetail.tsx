@@ -1,9 +1,22 @@
 import { useState, useEffect, Suspense, lazy } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { Card, Badge, Button, Spinner, Skeleton } from '../components/ui'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { Card, Badge, Button, Spinner, Skeleton, TabNav } from '../components/ui'
+import { relativeTime } from '../utils/time'
 import styles from './CampaignDetail.module.css'
 
 const AssetsTab = lazy(() => import('../components/assets/AssetsTab'))
+const DiscussionTab = lazy(() => import('../components/campaigns/tabs/DiscussionTab'))
+const MetricsTab = lazy(() => import('../components/campaigns/tabs/MetricsTab'))
+const TimelineTab = lazy(() => import('../components/campaigns/tabs/TimelineTab'))
+
+type TabId = 'assets' | 'discussion' | 'metrics' | 'timeline'
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'assets', label: 'Assets' },
+  { id: 'discussion', label: 'Discussion' },
+  { id: 'metrics', label: 'Metrics' },
+  { id: 'timeline', label: 'Timeline' },
+]
 
 interface Campaign {
   id: string
@@ -36,23 +49,6 @@ function formatDate(dateStr: string): string {
   })
 }
 
-function relativeTime(dateStr: string): string {
-  const now = Date.now()
-  const then = new Date(dateStr).getTime()
-  const seconds = Math.floor((now - then) / 1000)
-
-  if (seconds < 60) return 'just now'
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days}d ago`
-  const months = Math.floor(days / 30)
-  if (months < 12) return `${months}mo ago`
-  return `${Math.floor(months / 12)}y ago`
-}
-
 const STATUS_CONFIG: Record<string, { label: string; variant: 'success' | 'neutral' | 'default' }> = {
   active: { label: 'Active', variant: 'success' },
   paused: { label: 'Paused', variant: 'neutral' },
@@ -60,13 +56,29 @@ const STATUS_CONFIG: Record<string, { label: string; variant: 'success' | 'neutr
   archived: { label: 'Archived', variant: 'default' },
 }
 
+function getTabFromHash(hash: string): TabId {
+  const tabId = hash.replace('#', '') as TabId
+  return TABS.some((t) => t.id === tabId) ? tabId : 'assets'
+}
+
 export default function CampaignDetail() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [campaign, setCampaign] = useState<Campaign | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<TabId>(() => getTabFromHash(location.hash))
+
+  // Sync tab with URL hash
+  useEffect(() => {
+    setActiveTab(getTabFromHash(location.hash))
+  }, [location.hash])
+
+  const handleTabChange = (tabId: string) => {
+    navigate(`#${tabId}`, { replace: true })
+  }
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -183,10 +195,22 @@ export default function CampaignDetail() {
           </div>
         </section>
 
-        {/* Assets Tab */}
+        {/* Tab Navigation */}
         <section className={styles.section}>
-          <Suspense fallback={<Spinner size="lg" />}>
-            <AssetsTab campaignId={campaign.id} />
+          <TabNav
+            tabs={TABS}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+        </section>
+
+        {/* Tab Content */}
+        <section className={styles.section}>
+          <Suspense fallback={<div className={styles.tabLoading}><Spinner size="lg" /></div>}>
+            {activeTab === 'assets' && <AssetsTab campaignId={campaign.id} />}
+            {activeTab === 'discussion' && <DiscussionTab campaignId={campaign.id} />}
+            {activeTab === 'metrics' && <MetricsTab campaignId={campaign.id} />}
+            {activeTab === 'timeline' && <TimelineTab campaignId={campaign.id} />}
           </Suspense>
         </section>
       </div>

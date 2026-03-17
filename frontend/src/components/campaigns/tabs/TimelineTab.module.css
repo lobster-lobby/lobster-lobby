@@ -1,0 +1,118 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-lg);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--ll-space-xl);
+}
+
+.error {
+  padding: var(--ll-space-md);
+  background: var(--ll-error-bg);
+  color: var(--ll-error);
+  border-radius: var(--ll-radius-md);
+}
+
+.title {
+  font-size: var(--ll-font-lg);
+  font-weight: 600;
+  color: var(--ll-text-primary);
+  margin: 0;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.timelineItem {
+  display: flex;
+  gap: var(--ll-space-md);
+}
+
+.timelineLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.timelineIcon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ll-radius-full);
+  color: white;
+  font-weight: 700;
+  font-size: var(--ll-font-sm);
+  z-index: 1;
+}
+
+.timelineLine {
+  width: 2px;
+  flex: 1;
+  background: var(--ll-border);
+  margin-top: var(--ll-space-xs);
+}
+
+.timelineContent {
+  flex: 1;
+  padding-bottom: var(--ll-space-lg);
+}
+
+.timelineHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--ll-space-xs);
+}
+
+.timelineTitle {
+  font-weight: 600;
+  color: var(--ll-text-primary);
+  font-size: var(--ll-font-base);
+}
+
+.timelineType {
+  font-size: var(--ll-font-xs);
+  font-weight: 500;
+  padding: 2px var(--ll-space-xs);
+  background: var(--ll-bg-secondary);
+  border-radius: var(--ll-radius-sm);
+}
+
+.timelineDesc {
+  color: var(--ll-text-secondary);
+  font-size: var(--ll-font-sm);
+  line-height: 1.5;
+  margin: 0 0 var(--ll-space-xs) 0;
+}
+
+.timelineTime {
+  font-size: var(--ll-font-xs);
+  color: var(--ll-text-tertiary);
+}
+
+.timelineTime span {
+  cursor: help;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .timelineIcon {
+    width: 28px;
+    height: 28px;
+    font-size: var(--ll-font-xs);
+  }
+
+  .timelineContent {
+    padding-bottom: var(--ll-space-md);
+  }
+}

@@ -1,0 +1,222 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-md);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--ll-space-xl);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ll-space-sm);
+}
+
+.title {
+  font-size: var(--ll-font-lg);
+  font-weight: 600;
+  color: var(--ll-text-primary);
+  margin: 0;
+}
+
+.select {
+  padding: var(--ll-space-xs) var(--ll-space-sm);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-md);
+  background: var(--ll-bg-secondary);
+  color: var(--ll-text-primary);
+  font-size: var(--ll-font-sm);
+  cursor: pointer;
+}
+
+.commentForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-sm);
+  padding: var(--ll-space-md);
+  background: var(--ll-bg-secondary);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-lg);
+}
+
+.textarea {
+  width: 100%;
+  padding: var(--ll-space-sm);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-md);
+  background: var(--ll-bg-primary);
+  color: var(--ll-text-primary);
+  font-family: inherit;
+  font-size: var(--ll-font-base);
+  resize: vertical;
+  min-height: 60px;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--ll-primary);
+}
+
+.formActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.charCount {
+  font-size: var(--ll-font-xs);
+  color: var(--ll-text-tertiary);
+}
+
+.loginPrompt {
+  padding: var(--ll-space-md);
+  background: var(--ll-bg-secondary);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-lg);
+  text-align: center;
+  color: var(--ll-text-secondary);
+}
+
+.error {
+  padding: var(--ll-space-md);
+  background: var(--ll-error-bg);
+  color: var(--ll-error);
+  border-radius: var(--ll-radius-md);
+}
+
+.commentList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-md);
+}
+
+.comment {
+  padding: var(--ll-space-md);
+  background: var(--ll-bg-secondary);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-lg);
+}
+
+.commentHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-sm);
+  margin-bottom: var(--ll-space-xs);
+}
+
+.author {
+  font-weight: 600;
+  color: var(--ll-text-primary);
+  font-size: var(--ll-font-sm);
+}
+
+.time {
+  font-size: var(--ll-font-xs);
+  color: var(--ll-text-tertiary);
+}
+
+.commentBody {
+  color: var(--ll-text-primary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.commentActions {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-md);
+  margin-top: var(--ll-space-sm);
+}
+
+.voteButtons {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-xs);
+}
+
+.voteBtn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-sm);
+  background: var(--ll-bg-primary);
+  color: var(--ll-text-secondary);
+  font-size: var(--ll-font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.voteBtn:hover:not(:disabled) {
+  background: var(--ll-bg-tertiary);
+}
+
+.voteBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.voteBtn.active {
+  background: var(--ll-primary);
+  color: white;
+  border-color: var(--ll-primary);
+}
+
+.voteCount {
+  font-size: var(--ll-font-sm);
+  font-weight: 600;
+  color: var(--ll-text-primary);
+  min-width: 24px;
+  text-align: center;
+}
+
+.replyBtn {
+  background: none;
+  border: none;
+  color: var(--ll-text-secondary);
+  font-size: var(--ll-font-sm);
+  cursor: pointer;
+  padding: 0;
+}
+
+.replyBtn:hover {
+  color: var(--ll-primary);
+  text-decoration: underline;
+}
+
+.replies {
+  margin-top: var(--ll-space-md);
+  padding-left: var(--ll-space-md);
+  border-left: 2px solid var(--ll-border);
+}
+
+.replyForm {
+  margin-left: var(--ll-space-lg);
+  margin-top: var(--ll-space-sm);
+  padding: var(--ll-space-sm);
+  background: var(--ll-bg-tertiary);
+  border-radius: var(--ll-radius-md);
+}
+
+.replyForm .formActions {
+  justify-content: flex-end;
+  gap: var(--ll-space-sm);
+  margin-top: var(--ll-space-sm);
+}
+
+.toastContainer {
+  position: fixed;
+  bottom: var(--ll-space-lg);
+  right: var(--ll-space-lg);
+  z-index: 1000;
+}

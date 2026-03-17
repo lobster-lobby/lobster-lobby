@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,6 +18,32 @@ import (
 	"github.com/lobster-lobby/lobster-lobby/models"
 	"github.com/lobster-lobby/lobster-lobby/repository"
 )
+
+// createAssetAddedEvent creates a campaign event for an added asset.
+func (h *AssetHandler) createAssetAddedEvent(campaignID bson.ObjectID, asset *models.CampaignAsset) {
+	if h.events == nil {
+		return
+	}
+	event := &models.CampaignEvent{
+		CampaignID:  campaignID,
+		Type:        models.CampaignEventAssetAdded,
+		Title:       "Asset Added",
+		Description: asset.Title + " was submitted by " + asset.CreatedByUsername,
+		Metadata: map[string]any{
+			"assetId":    asset.ID.Hex(),
+			"assetTitle": asset.Title,
+			"assetType":  string(asset.Type),
+			"authorName": asset.CreatedByUsername,
+		},
+	}
+	// Fire and forget
+	go func() {
+		ctx := context.Background()
+		if err := h.events.Create(ctx, event); err != nil {
+			h.logger.Warn("failed to create asset_added event", zap.Error(err))
+		}
+	}()
+}
 
 const (
 	maxImageSize = 10 * 1024 * 1024  // 10MB
@@ -35,6 +62,7 @@ type AssetHandler struct {
 	assets    *repository.AssetRepository
 	campaigns *repository.CampaignRepository
 	users     *repository.UserRepository
+	events    *repository.CampaignEventRepository
 	logger    *zap.Logger
 }
 
@@ -42,12 +70,14 @@ func NewAssetHandler(
 	assets *repository.AssetRepository,
 	campaigns *repository.CampaignRepository,
 	users *repository.UserRepository,
+	events *repository.CampaignEventRepository,
 	logger *zap.Logger,
 ) *AssetHandler {
 	return &AssetHandler{
 		assets:    assets,
 		campaigns: campaigns,
 		users:     users,
+		events:    events,
 		logger:    logger,
 	}
 }
@@ -126,6 +156,9 @@ func (h *AssetHandler) CreateTextAsset(c *gin.Context) {
 
 	// Update campaign asset count
 	h.updateCampaignAssetCount(c, campaignID)
+
+	// Create asset_added event
+	h.createAssetAddedEvent(campaign.ID, asset)
 
 	c.JSON(http.StatusCreated, gin.H{"asset": asset})
 }
@@ -279,6 +312,9 @@ func (h *AssetHandler) UploadAsset(c *gin.Context) {
 
 	// Update campaign asset count
 	h.updateCampaignAssetCount(c, campaignID)
+
+	// Create asset_added event
+	h.createAssetAddedEvent(campaign.ID, asset)
 
 	c.JSON(http.StatusCreated, gin.H{"asset": asset})
 }

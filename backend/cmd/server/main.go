@@ -98,9 +98,23 @@ func main() {
 		}()
 	}
 
+	// Campaign comments
+	campaignCommentRepo := repository.NewCampaignCommentRepository(mongo)
+	if err := campaignCommentRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure campaign comment indexes", zap.Error(err))
+	}
+
+	// Campaign events
+	campaignEventRepo := repository.NewCampaignEventRepository(mongo)
+	if err := campaignEventRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure campaign event indexes", zap.Error(err))
+	}
+
 	authHandler := handlers.NewAuthHandler(userRepo, refreshTokenRepo, jwtSvc)
 	policyHandler := handlers.NewPolicyHandler(policyRepo, userRepo, jwtSvc, logger, reputationSvc, searchSvc)
-	campaignHandler := handlers.NewCampaignHandler(campaignRepo, policyRepo, userRepo, jwtSvc, reputationSvc, logger)
+	campaignHandler := handlers.NewCampaignHandler(campaignRepo, policyRepo, userRepo, campaignEventRepo, jwtSvc, reputationSvc, logger)
+	campaignCommentHandler := handlers.NewCampaignCommentHandler(campaignCommentRepo, campaignRepo, userRepo, campaignEventRepo, logger)
+	campaignEventHandler := handlers.NewCampaignEventHandler(campaignEventRepo, campaignRepo, logger)
 	apiKeyHandler := handlers.NewAPIKeyHandler(apiKeyRepo, apiKeySvc)
 	dashboardHandler := handlers.NewDashboardHandler(userRepo, policyRepo, activityRepo, reputationSvc, logger)
 	searchHandler := handlers.NewSearchHandler(searchSvc, logger)
@@ -138,7 +152,8 @@ func main() {
 	if err := assetRepo.EnsureIndexes(bgCtx); err != nil {
 		logger.Warn("failed to ensure asset indexes", zap.Error(err))
 	}
-	assetHandler := handlers.NewAssetHandler(assetRepo, campaignRepo, userRepo, logger)
+
+	assetHandler := handlers.NewAssetHandler(assetRepo, campaignRepo, userRepo, campaignEventRepo, logger)
 
 	rateLimiter := middleware.NewRateLimiter()
 
@@ -226,6 +241,17 @@ func main() {
 			campaigns.POST("/:id/assets/:assetId/share", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.Share)
 			campaigns.PATCH("/:id/assets/:assetId", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.Update)
 			campaigns.DELETE("/:id/assets/:assetId", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), assetHandler.Delete)
+
+			// Campaign comments (discussion)
+			campaigns.GET("/:id/comments", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignCommentHandler.List)
+			campaigns.POST("/:id/comments", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignCommentHandler.Create)
+			campaigns.PUT("/:id/comments/:commentId", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignCommentHandler.Update)
+			campaigns.DELETE("/:id/comments/:commentId", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignCommentHandler.Delete)
+			campaigns.POST("/:id/comments/:commentId/vote", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignCommentHandler.Vote)
+
+			// Campaign events (timeline) and metrics
+			campaigns.GET("/:id/events", campaignEventHandler.List)
+			campaigns.GET("/:id/metrics/activity", campaignEventHandler.GetActivity)
 		}
 
 		api.GET("/search", searchHandler.Search)
