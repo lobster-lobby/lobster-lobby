@@ -1,4 +1,6 @@
 import { Button, Card } from '../components/ui'
+import { useAuth } from '../hooks/useAuth'
+import PolicyFeed from './PolicyFeed'
 import './Home.css'
 
 const howItWorks = [
@@ -46,6 +48,12 @@ const forCards = [
 ]
 
 export default function Home() {
+  const { isAuthenticated } = useAuth()
+
+  if (isAuthenticated) {
+    return <PolicyFeed />
+  }
+
   const scrollToHowItWorks = () => {
     document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })
   }
