@@ -77,6 +77,11 @@ func main() {
 
 	activityRepo := repository.NewActivityRepository(mongo)
 
+	campaignActivityRepo := repository.NewCampaignActivityRepository(mongo)
+	if err := campaignActivityRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure campaign activity indexes", zap.Error(err))
+	}
+
 	// Optionally rebuild search index from MongoDB on startup
 	if cfg.RebuildIndex {
 		bgCtxSearch := context.Background()
@@ -113,8 +118,9 @@ func main() {
 	authHandler := handlers.NewAuthHandler(userRepo, refreshTokenRepo, jwtSvc)
 	policyHandler := handlers.NewPolicyHandler(policyRepo, userRepo, jwtSvc, logger, reputationSvc, searchSvc)
 	campaignHandler := handlers.NewCampaignHandler(campaignRepo, policyRepo, userRepo, campaignEventRepo, jwtSvc, reputationSvc, logger)
-	campaignCommentHandler := handlers.NewCampaignCommentHandler(campaignCommentRepo, campaignRepo, userRepo, campaignEventRepo, logger)
+	campaignCommentHandler := handlers.NewCampaignCommentHandler(campaignCommentRepo, campaignRepo, userRepo, campaignEventRepo, campaignActivityRepo, logger)
 	campaignEventHandler := handlers.NewCampaignEventHandler(campaignEventRepo, campaignRepo, logger)
+	campaignActivityHandler := handlers.NewCampaignActivityHandler(campaignActivityRepo, campaignRepo, logger)
 	apiKeyHandler := handlers.NewAPIKeyHandler(apiKeyRepo, apiKeySvc)
 	dashboardHandler := handlers.NewDashboardHandler(userRepo, policyRepo, activityRepo, reputationSvc, logger)
 	searchHandler := handlers.NewSearchHandler(searchSvc, logger)
@@ -157,7 +163,7 @@ func main() {
 		logger.Warn("failed to ensure asset indexes", zap.Error(err))
 	}
 
-	assetHandler := handlers.NewAssetHandler(assetRepo, campaignRepo, userRepo, campaignEventRepo, logger)
+	assetHandler := handlers.NewAssetHandler(assetRepo, campaignRepo, userRepo, campaignEventRepo, campaignActivityRepo, logger)
 
 	// Debates (standalone)
 	debateRepo := repository.NewDebateRepository(mongo)
@@ -284,6 +290,10 @@ func main() {
 			// Campaign events (timeline) and metrics
 			campaigns.GET("/:id/events", campaignEventHandler.List)
 			campaigns.GET("/:id/metrics/activity", campaignEventHandler.GetActivity)
+
+			// Campaign activity feed and reach metrics
+			campaigns.GET("/:id/activity", campaignActivityHandler.ListActivity)
+			campaigns.GET("/:id/reach", campaignActivityHandler.GetReachMetrics)
 		}
 
 		// Standalone debates

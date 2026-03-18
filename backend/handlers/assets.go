@@ -59,11 +59,12 @@ var allowedMimeTypes = map[string]bool{
 }
 
 type AssetHandler struct {
-	assets    *repository.AssetRepository
-	campaigns *repository.CampaignRepository
-	users     *repository.UserRepository
-	events    *repository.CampaignEventRepository
-	logger    *zap.Logger
+	assets     *repository.AssetRepository
+	campaigns  *repository.CampaignRepository
+	users      *repository.UserRepository
+	events     *repository.CampaignEventRepository
+	activities *repository.CampaignActivityRepository
+	logger     *zap.Logger
 }
 
 func NewAssetHandler(
@@ -71,14 +72,16 @@ func NewAssetHandler(
 	campaigns *repository.CampaignRepository,
 	users *repository.UserRepository,
 	events *repository.CampaignEventRepository,
+	activities *repository.CampaignActivityRepository,
 	logger *zap.Logger,
 ) *AssetHandler {
 	return &AssetHandler{
-		assets:    assets,
-		campaigns: campaigns,
-		users:     users,
-		events:    events,
-		logger:    logger,
+		assets:     assets,
+		campaigns:  campaigns,
+		users:      users,
+		events:     events,
+		activities: activities,
+		logger:     logger,
 	}
 }
 
@@ -159,6 +162,9 @@ func (h *AssetHandler) CreateTextAsset(c *gin.Context) {
 
 	// Create asset_added event
 	h.createAssetAddedEvent(campaign.ID, asset)
+
+	// Record upload activity
+	h.recordActivity(campaign.ID, userID, models.CampaignActivityUpload, user.Username+" uploaded asset: "+asset.Title)
 
 	c.JSON(http.StatusCreated, gin.H{"asset": asset})
 }
@@ -315,6 +321,9 @@ func (h *AssetHandler) UploadAsset(c *gin.Context) {
 
 	// Create asset_added event
 	h.createAssetAddedEvent(campaign.ID, asset)
+
+	// Record upload activity
+	h.recordActivity(campaign.ID, userID, models.CampaignActivityUpload, user.Username+" uploaded file: "+asset.Title)
 
 	c.JSON(http.StatusCreated, gin.H{"asset": asset})
 }
@@ -567,6 +576,12 @@ func (h *AssetHandler) Share(c *gin.Context) {
 	// Update campaign metrics
 	h.incrementCampaignShares(c, campaignID, req.Platform)
 
+	// Record share activity
+	if userIDStr, exists := c.Get(middleware.ContextUserID); exists {
+		userID, _ := bson.ObjectIDFromHex(userIDStr.(string))
+		h.recordActivity(asset.CampaignID, userID, models.CampaignActivityShare, "Shared asset on "+req.Platform)
+	}
+
 	// Get updated asset
 	updatedAsset, _ := h.assets.GetByID(c, assetID)
 
@@ -734,6 +749,23 @@ func (h *AssetHandler) incrementCampaignShares(c *gin.Context, campaignID, platf
 		h.logger.Warn("failed to update campaign shares by platform", zap.Error(err))
 	}
 	h.campaigns.RecalcTrending(c, campaignID)
+}
+
+func (h *AssetHandler) recordActivity(campaignID, userID bson.ObjectID, actType models.CampaignActivityType, desc string) {
+	if h.activities == nil {
+		return
+	}
+	go func() {
+		activity := &models.CampaignActivity{
+			Type:        actType,
+			UserID:      userID,
+			CampaignID:  campaignID,
+			Description: desc,
+		}
+		if err := h.activities.Create(context.Background(), activity); err != nil {
+			h.logger.Warn("failed to record campaign activity", zap.Error(err))
+		}
+	}()
 }
 
 func sanitizeFilename(filename string) string {
