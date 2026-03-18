@@ -1,0 +1,127 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  padding: var(--ll-space-2xl) var(--ll-space-lg);
+  animation: fadeIn 400ms ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.icon {
+  font-size: 5rem;
+  line-height: 1;
+  margin-bottom: var(--ll-space-lg);
+}
+
+.code {
+  font-size: 4.5rem;
+  font-weight: 800;
+  color: var(--ll-error);
+  line-height: 1;
+  margin: 0 0 var(--ll-space-sm);
+  letter-spacing: -2px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ll-text);
+  margin: 0 0 var(--ll-space-sm);
+}
+
+.description {
+  font-size: 1rem;
+  color: var(--ll-text-secondary);
+  margin: 0 0 var(--ll-space-xl);
+  max-width: 420px;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  gap: var(--ll-space-md);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ll-space-xs);
+  padding: var(--ll-space-sm) var(--ll-space-xl);
+  background: var(--ll-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--ll-radius-full);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.primaryBtn:hover {
+  background: var(--ll-primary-hover);
+  transform: translateY(-1px);
+}
+
+.primaryBtn:active {
+  transform: translateY(0);
+}
+
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ll-space-xs);
+  padding: var(--ll-space-sm) var(--ll-space-xl);
+  background: transparent;
+  color: var(--ll-text-secondary);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-full);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.secondaryBtn:hover {
+  border-color: var(--ll-text-muted);
+  color: var(--ll-text);
+  transform: translateY(-1px);
+}
+
+.secondaryBtn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 640px) {
+  .code {
+    font-size: 3.5rem;
+  }
+
+  .icon {
+    font-size: 4rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: center;
+  }
+}
