@@ -22,15 +22,33 @@
   font-size: 1rem;
 }
 
-/* Search form */
-.searchForm {
-  max-width: 600px;
-  margin: 0 auto var(--ll-space-xl);
+/* Filters */
+.filters {
+  margin-bottom: var(--ll-space-xl);
 }
 
-.searchRow {
+.filterRow {
   display: flex;
   gap: var(--ll-space-sm);
+  margin-top: var(--ll-space-sm);
+  flex-wrap: wrap;
+}
+
+.filterSelect {
+  padding: 8px 12px;
+  border: 1px solid var(--ll-border, #d1d5db);
+  border-radius: var(--ll-radius-md);
+  background: var(--ll-surface, #fff);
+  color: var(--ll-text, #1a1a1a);
+  font-size: 0.9rem;
+  min-width: 140px;
+}
+
+/* Search form */
+.searchForm {
+  display: flex;
+  gap: var(--ll-space-sm);
+  max-width: 600px;
 }
 
 .searchInput {
@@ -78,154 +96,123 @@
 /* Results grid */
 .results {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--ll-space-lg);
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--ll-space-md);
 }
 
-/* Official card */
-.officialCard {
-  background: var(--ll-bg-card);
-  border: 1px solid var(--ll-border);
+/* Rep card */
+.repCard {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: var(--ll-surface, #fff);
   border-radius: var(--ll-radius-lg);
-  padding: var(--ll-space-lg);
-  display: flex;
-  flex-direction: column;
-  gap: var(--ll-space-md);
-  transition: box-shadow 150ms ease;
-}
-
-.officialCard:hover {
   box-shadow: var(--ll-shadow-md);
+  padding: var(--ll-space-lg);
+  transition: box-shadow 0.15s, transform 0.15s;
 }
 
-.officialHeader {
+.repCard:hover {
+  box-shadow: var(--ll-shadow-lg);
+  transform: translateY(-1px);
+}
+
+.repHeader {
   display: flex;
   gap: var(--ll-space-md);
-  align-items: flex-start;
+  align-items: center;
 }
 
-.officialPhoto {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--ll-radius-full);
+.repPhoto {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--ll-radius-md);
   object-fit: cover;
-  background: var(--ll-bg-elevated);
-  flex-shrink: 0;
 }
 
-.officialAvatar {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--ll-radius-full);
-  background: var(--ll-primary-tint);
+.repAvatar {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--ll-radius-md);
+  background: var(--ll-primary);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--ll-primary);
-  flex-shrink: 0;
+  font-weight: 600;
 }
 
-.officialInfo {
+.repInfo {
   flex: 1;
   min-width: 0;
 }
 
-.officialName {
-  margin: 0 0 var(--ll-space-xs);
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--ll-text);
-  line-height: 1.3;
-}
-
-.officialTitle {
-  margin: 0 0 var(--ll-space-xs);
-  font-size: 0.875rem;
-  color: var(--ll-text-secondary);
-  line-height: 1.4;
-}
-
-.officialParty {
-  display: inline-flex;
-  padding: 2px var(--ll-space-sm);
-  font-size: 0.75rem;
+.repName {
+  font-size: 1rem;
   font-weight: 600;
-  border-radius: var(--ll-radius-full);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  margin: 0 0 2px;
+  color: var(--ll-text, #1a1a1a);
 }
 
-.partyDemocratic {
-  color: #1a73e8;
-  background: rgba(26, 115, 232, 0.1);
+.repTitle {
+  font-size: 0.85rem;
+  color: var(--ll-text-secondary, #666);
+  margin: 0 0 4px;
 }
 
-.partyRepublican {
-  color: #d93025;
-  background: rgba(217, 48, 37, 0.1);
-}
-
-.partyOther {
-  color: var(--ll-text-secondary);
-  background: var(--ll-bg-elevated);
-}
-
-/* Contact info */
-.contactList {
+.repMeta {
   display: flex;
-  flex-direction: column;
   gap: var(--ll-space-sm);
-}
-
-.contactItem {
-  display: flex;
   align-items: center;
-  gap: var(--ll-space-sm);
-  font-size: 0.875rem;
-  color: var(--ll-text-secondary);
-}
-
-.contactItem a {
-  color: var(--ll-primary);
-  text-decoration: none;
-}
-
-.contactItem a:hover {
-  text-decoration: underline;
-}
-
-.contactIcon {
-  width: 16px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-/* Social links */
-.socialLinks {
-  display: flex;
-  gap: var(--ll-space-sm);
   flex-wrap: wrap;
 }
 
-.socialLink {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  font-size: 0.875rem;
-  color: var(--ll-text-secondary);
-  background: var(--ll-bg-elevated);
-  border-radius: var(--ll-radius-md);
-  text-decoration: none;
-  transition: background 150ms ease, color 150ms ease;
+.repParty {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: var(--ll-radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
-.socialLink:hover {
-  background: var(--ll-primary-tint);
-  color: var(--ll-primary);
+.partyDemocratic {
+  background: #e3f0ff;
+  color: #1a5fb4;
+}
+
+.partyRepublican {
+  background: #fce4e4;
+  color: #c01c28;
+}
+
+.partyOther {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.repState {
+  font-size: 0.8rem;
+  color: var(--ll-text-secondary, #888);
+}
+
+/* Address lookup section */
+.addressSection {
+  margin-top: var(--ll-space-2xl);
+  padding-top: var(--ll-space-xl);
+  border-top: 1px solid var(--ll-border, #e2e6ea);
+}
+
+.addressTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 var(--ll-space-xs);
+}
+
+.addressSubtitle {
+  color: var(--ll-text-secondary, #666);
+  margin: 0 0 var(--ll-space-md);
+  font-size: 0.9rem;
 }
 
 /* Empty / Loading / Error states */
@@ -289,7 +276,7 @@
     font-size: 1.5rem;
   }
 
-  .searchRow {
+  .searchForm {
     flex-direction: column;
   }
 
@@ -299,5 +286,9 @@
 
   .results {
     grid-template-columns: 1fr;
+  }
+
+  .filterRow {
+    flex-direction: column;
   }
 }
