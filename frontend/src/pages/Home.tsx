@@ -126,7 +126,7 @@ export default function Home() {
           <div className="how-grid">
             {howItWorks.map((item) => (
               <div className="how-card" key={item.title}>
-                <img src={item.image} alt={item.title} className="how-card-image" />
+                <img src={item.image} alt={item.title} className="how-card-image" loading="lazy" />
                 <span className="how-step-number">{item.step}</span>
                 <h3 className="how-title">{item.title}</h3>
                 <p className="how-description">{item.description}</p>
@@ -207,7 +207,7 @@ export default function Home() {
         <div className="section-inner">
           <div className="footer-content">
             <div className="footer-brand">
-              <img src="/assets/lobster-lobby-logo.svg" alt="Lobster Lobby" className="footer-logo" />
+              <img src="/assets/lobster-lobby-logo.svg" alt="Lobster Lobby" className="footer-logo" loading="lazy" />
               <span className="footer-name">Lobster Lobby</span>
             </div>
             <div className="footer-links">

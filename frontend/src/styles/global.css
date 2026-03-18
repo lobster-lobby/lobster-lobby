@@ -16,6 +16,12 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html *,
+html *::before,
+html *::after {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
 body {
   font-family: var(--ll-font);
   color: var(--ll-text);
@@ -60,4 +66,15 @@ input,
 textarea,
 select {
   font-family: var(--ll-font);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

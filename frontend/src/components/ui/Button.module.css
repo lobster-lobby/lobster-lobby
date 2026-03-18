@@ -59,14 +59,17 @@
 .sm {
   padding: var(--ll-space-xs) var(--ll-space-sm);
   font-size: 0.875rem;
+  min-height: 44px;
 }
 
 .md {
   padding: var(--ll-space-sm) var(--ll-space-md);
   font-size: 1rem;
+  min-height: 44px;
 }
 
 .lg {
   padding: var(--ll-space-md) var(--ll-space-lg);
   font-size: 1.125rem;
+  min-height: 44px;
 }

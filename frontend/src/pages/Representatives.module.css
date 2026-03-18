@@ -42,6 +42,7 @@
   color: var(--ll-text, #1a1a1a);
   font-size: 0.9rem;
   min-width: 140px;
+  min-height: 44px;
 }
 
 /* Search form */
@@ -54,6 +55,7 @@
 .searchInput {
   flex: 1;
   padding: var(--ll-space-md) var(--ll-space-lg);
+  min-height: 44px;
   font-size: 1rem;
   border: 1px solid var(--ll-border);
   border-radius: var(--ll-radius-lg);
@@ -74,6 +76,7 @@
 
 .searchBtn {
   padding: var(--ll-space-md) var(--ll-space-xl);
+  min-height: 44px;
   font-size: 1rem;
   font-weight: 600;
   color: white;

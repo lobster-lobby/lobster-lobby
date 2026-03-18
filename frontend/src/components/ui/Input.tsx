@@ -11,7 +11,7 @@ interface BaseInputProps {
 export interface InputProps
   extends BaseInputProps,
     Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
-  type?: 'text' | 'email' | 'password'
+  type?: 'text' | 'email' | 'password' | 'tel' | 'url' | 'number' | 'search'
 }
 
 export interface TextareaProps

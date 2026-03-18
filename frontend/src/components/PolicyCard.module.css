@@ -111,7 +111,7 @@
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 2px var(--ll-space-sm);
+  padding: var(--ll-space-xs) var(--ll-space-sm);
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--ll-primary);
@@ -121,6 +121,7 @@
   cursor: pointer;
   transition: background 150ms ease;
   line-height: 1.5;
+  min-height: 44px;
 }
 
 .tag:hover {
