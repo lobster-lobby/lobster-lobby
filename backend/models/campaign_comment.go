@@ -15,6 +15,7 @@ type CampaignComment struct {
 	AuthorID   bson.ObjectID  `bson:"authorId" json:"authorId"`
 	AuthorName string         `bson:"authorName" json:"authorName"`
 	Body       string         `bson:"body" json:"body"`
+	Pinned     bool           `bson:"pinned" json:"pinned"`
 	Votes      int            `bson:"votes" json:"votes"`
 	CreatedAt  time.Time      `bson:"createdAt" json:"createdAt"`
 	UpdatedAt  time.Time      `bson:"updatedAt" json:"updatedAt"`

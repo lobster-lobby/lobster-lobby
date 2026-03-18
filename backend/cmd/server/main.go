@@ -279,6 +279,7 @@ func main() {
 			campaigns.PUT("/:id/comments/:commentId", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignCommentHandler.Update)
 			campaigns.DELETE("/:id/comments/:commentId", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignCommentHandler.Delete)
 			campaigns.POST("/:id/comments/:commentId/vote", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignCommentHandler.Vote)
+			campaigns.PUT("/:id/comments/:commentId/pin", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), campaignCommentHandler.TogglePin)
 
 			// Campaign events (timeline) and metrics
 			campaigns.GET("/:id/events", campaignEventHandler.List)

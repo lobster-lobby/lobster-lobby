@@ -208,7 +208,7 @@ export default function CampaignDetail() {
         <section className={styles.section}>
           <Suspense fallback={<div className={styles.tabLoading}><Spinner size="lg" /></div>}>
             {activeTab === 'assets' && <AssetsTab campaignId={campaign.id} />}
-            {activeTab === 'discussion' && <DiscussionTab campaignId={campaign.id} />}
+            {activeTab === 'discussion' && <DiscussionTab campaignId={campaign.id} campaignCreatedBy={campaign.createdBy} />}
             {activeTab === 'metrics' && <MetricsTab campaignId={campaign.id} />}
             {activeTab === 'timeline' && <TimelineTab campaignId={campaign.id} />}
           </Suspense>

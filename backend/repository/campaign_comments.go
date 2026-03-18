@@ -30,6 +30,7 @@ func (r *CampaignCommentRepository) EnsureIndexes(ctx context.Context) error {
 		{Keys: bson.D{{Key: "authorId", Value: 1}}},
 		{Keys: bson.D{{Key: "createdAt", Value: -1}}},
 		{Keys: bson.D{{Key: "votes", Value: -1}}},
+		{Keys: bson.D{{Key: "campaignId", Value: 1}, {Key: "pinned", Value: 1}}},
 	})
 	if err != nil {
 		return err
@@ -288,6 +289,15 @@ func (r *CampaignCommentRepository) CountByCampaign(ctx context.Context, campaig
 		return 0, nil
 	}
 	return r.coll.CountDocuments(ctx, bson.M{"campaignId": campaignOID})
+}
+
+// CountPinnedByCampaign returns the number of pinned comments for a campaign.
+func (r *CampaignCommentRepository) CountPinnedByCampaign(ctx context.Context, campaignID string) (int64, error) {
+	campaignOID, err := bson.ObjectIDFromHex(campaignID)
+	if err != nil {
+		return 0, nil
+	}
+	return r.coll.CountDocuments(ctx, bson.M{"campaignId": campaignOID, "pinned": true})
 }
 
 func (r *CampaignCommentRepository) getSortField(sort string) bson.D {
