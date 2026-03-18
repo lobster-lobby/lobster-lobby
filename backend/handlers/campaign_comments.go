@@ -320,6 +320,81 @@ func (h *CampaignCommentHandler) Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "comment deleted"})
 }
 
+// TogglePin handles PUT /api/campaigns/:id/comments/:commentId/pin
+func (h *CampaignCommentHandler) TogglePin(c *gin.Context) {
+	idOrSlug := c.Param("id")
+	commentID := c.Param("commentId")
+
+	campaign, err := ResolveCampaign(c, h.campaigns, idOrSlug)
+	if err != nil || campaign == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "campaign not found"})
+		return
+	}
+
+	comment, err := h.comments.GetByID(c, commentID)
+	if err != nil {
+		h.logger.Error("failed to get comment", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get comment"})
+		return
+	}
+	if comment == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
+		return
+	}
+
+	if comment.CampaignID != campaign.ID {
+		c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
+		return
+	}
+
+	// Only campaign creator or admin can pin
+	userIDStr, exists := c.Get(middleware.ContextUserID)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		return
+	}
+	userID, err := bson.ObjectIDFromHex(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	isCreator := campaign.CreatedBy == userID
+	isAdmin := false
+	user, err := h.users.FindByID(c, userID)
+	if err == nil && user != nil {
+		isAdmin = user.Role == "admin"
+	}
+
+	if !isCreator && !isAdmin {
+		c.JSON(http.StatusForbidden, gin.H{"error": "only the campaign creator or an admin can pin comments"})
+		return
+	}
+
+	// If pinning (not already pinned), enforce max 3
+	if !comment.Pinned {
+		pinnedCount, err := h.comments.CountPinnedByCampaign(c, campaign.ID.Hex())
+		if err != nil {
+			h.logger.Error("failed to count pinned comments", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to toggle pin"})
+			return
+		}
+		if pinnedCount >= 3 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "maximum of 3 pinned comments per campaign"})
+			return
+		}
+	}
+
+	updatedComment, err := h.comments.Update(c, commentID, bson.M{"pinned": !comment.Pinned})
+	if err != nil {
+		h.logger.Error("failed to toggle pin", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to toggle pin"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"comment": updatedComment})
+}
+
 // Vote handles POST /api/campaigns/:slug/comments/:id/vote
 func (h *CampaignCommentHandler) Vote(c *gin.Context) {
 	idOrSlug := c.Param("id")

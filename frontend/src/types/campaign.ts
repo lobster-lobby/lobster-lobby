@@ -5,6 +5,7 @@ export interface CampaignComment {
   authorId: string
   authorName: string
   body: string
+  pinned: boolean
   votes: number
   createdAt: string
   updatedAt: string

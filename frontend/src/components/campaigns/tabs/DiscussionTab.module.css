@@ -103,11 +103,30 @@
   border-radius: var(--ll-radius-lg);
 }
 
+.comment.pinned {
+  border-color: var(--ll-accent);
+  background: var(--ll-bg-elevated);
+}
+
 .commentHeader {
   display: flex;
   align-items: center;
   gap: var(--ll-space-sm);
   margin-bottom: var(--ll-space-xs);
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ll-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .author {
@@ -119,6 +138,16 @@
 .time {
   font-size: var(--ll-font-xs);
   color: var(--ll-text-tertiary);
+}
+
+.pinBadge {
+  font-size: var(--ll-font-xs);
+  font-weight: 600;
+  color: var(--ll-accent);
+  background: color-mix(in srgb, var(--ll-accent) 12%, transparent);
+  padding: 1px var(--ll-space-xs);
+  border-radius: var(--ll-radius-sm);
+  margin-left: auto;
 }
 
 .commentBody {
@@ -194,6 +223,20 @@
   text-decoration: underline;
 }
 
+.pinBtn {
+  background: none;
+  border: none;
+  color: var(--ll-text-secondary);
+  font-size: var(--ll-font-sm);
+  cursor: pointer;
+  padding: 0;
+}
+
+.pinBtn:hover {
+  color: var(--ll-accent);
+  text-decoration: underline;
+}
+
 .replies {
   margin-top: var(--ll-space-md);
   padding-left: var(--ll-space-md);
@@ -219,4 +262,22 @@
   bottom: var(--ll-space-lg);
   right: var(--ll-space-lg);
   z-index: 1000;
+}
+
+@media (max-width: 640px) {
+  .commentHeader {
+    flex-wrap: wrap;
+  }
+
+  .pinBadge {
+    margin-left: 0;
+  }
+
+  .comment {
+    padding: var(--ll-space-sm);
+  }
+
+  .replies {
+    padding-left: var(--ll-space-sm);
+  }
 }
