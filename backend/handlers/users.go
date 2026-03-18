@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"net/http"
-	"strings"
+	"net/mail"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -120,7 +120,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 
 	// Validate email if changed
 	if req.Email != "" && req.Email != currentUser.Email {
-		if !strings.Contains(req.Email, "@") {
+		if _, err := mail.ParseAddress(req.Email); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "valid email required"})
 			return
 		}

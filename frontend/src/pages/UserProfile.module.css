@@ -82,6 +82,12 @@
 .username {
   font-size: 0.875rem;
   color: var(--ll-text-muted);
+  margin-bottom: var(--ll-space-xs);
+}
+
+.email {
+  font-size: 0.8125rem;
+  color: var(--ll-text-secondary);
   margin-bottom: var(--ll-space-sm);
 }
 

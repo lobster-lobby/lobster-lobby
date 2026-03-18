@@ -7,6 +7,7 @@ import styles from './UserProfile.module.css'
 interface UserProfile {
   id: string
   username: string
+  email?: string
   displayName: string
   bio: string
   type: string
@@ -143,6 +144,9 @@ export default function UserProfile() {
             {profile.displayName || profile.username}
           </h1>
           <p className={styles.username}>@{profile.username}</p>
+          {isOwnProfile && profile.email && (
+            <p className={styles.email}>{profile.email}</p>
+          )}
           {profile.bio && <p className={styles.bio}>{profile.bio}</p>}
           <p className={styles.memberSince}>
             Member since {formatDate(profile.createdAt)}
