@@ -188,7 +188,7 @@ export default function Representatives() {
               <Link key={rep.id} to={`/representatives/${rep.id}`} className={styles.repCard}>
                 <div className={styles.repHeader}>
                   {rep.photoUrl ? (
-                    <img src={rep.photoUrl} alt={rep.name} className={styles.repPhoto} />
+                    <img src={rep.photoUrl} alt={rep.name} className={styles.repPhoto} loading="lazy" />
                   ) : (
                     <div className={styles.repAvatar}>{rep.name.charAt(0)}</div>
                   )}
