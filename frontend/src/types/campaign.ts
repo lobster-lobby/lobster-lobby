@@ -57,6 +57,42 @@ export interface CampaignActivityResponse {
   metrics: CampaignMetrics
 }
 
+export type CampaignActivityType = 'join' | 'share' | 'comment' | 'upload'
+
+export interface CampaignActivity {
+  id: string
+  type: CampaignActivityType
+  userId: string
+  campaignId: string
+  description: string
+  createdAt: string
+}
+
+export interface CampaignActivityListResponse {
+  activities: CampaignActivity[]
+  total: number
+  page: number
+  limit: number
+}
+
+export interface ReachMetrics {
+  totalSupporters: number
+  totalShares: number
+  totalDownloads: number
+  uniqueParticipants: number
+  trendingScore: number
+}
+
+export const ACTIVITY_TYPE_CONFIG: Record<
+  CampaignActivityType,
+  { label: string; color: string; icon: string }
+> = {
+  join: { label: 'Joined', color: 'var(--ll-success)', icon: 'J' },
+  share: { label: 'Shared', color: 'var(--ll-info)', icon: 'S' },
+  comment: { label: 'Commented', color: 'var(--ll-accent)', icon: 'C' },
+  upload: { label: 'Uploaded', color: 'var(--ll-primary)', icon: 'U' },
+}
+
 export const EVENT_TYPE_CONFIG: Record<
   CampaignEventType,
   { label: string; color: string; icon: string }

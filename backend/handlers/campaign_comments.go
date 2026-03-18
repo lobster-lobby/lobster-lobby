@@ -15,11 +15,12 @@ import (
 )
 
 type CampaignCommentHandler struct {
-	comments  *repository.CampaignCommentRepository
-	campaigns *repository.CampaignRepository
-	users     *repository.UserRepository
-	events    *repository.CampaignEventRepository
-	logger    *zap.Logger
+	comments   *repository.CampaignCommentRepository
+	campaigns  *repository.CampaignRepository
+	users      *repository.UserRepository
+	events     *repository.CampaignEventRepository
+	activities *repository.CampaignActivityRepository
+	logger     *zap.Logger
 }
 
 func NewCampaignCommentHandler(
@@ -27,14 +28,16 @@ func NewCampaignCommentHandler(
 	campaigns *repository.CampaignRepository,
 	users *repository.UserRepository,
 	events *repository.CampaignEventRepository,
+	activities *repository.CampaignActivityRepository,
 	logger *zap.Logger,
 ) *CampaignCommentHandler {
 	return &CampaignCommentHandler{
-		comments:  comments,
-		campaigns: campaigns,
-		users:     users,
-		events:    events,
-		logger:    logger,
+		comments:   comments,
+		campaigns:  campaigns,
+		users:      users,
+		events:     events,
+		activities: activities,
+		logger:     logger,
 	}
 }
 
@@ -179,6 +182,21 @@ func (h *CampaignCommentHandler) Create(c *gin.Context) {
 			})
 		}
 	}()
+
+	// Record comment activity
+	if h.activities != nil {
+		go func() {
+			activity := &models.CampaignActivity{
+				Type:        models.CampaignActivityComment,
+				UserID:      userID,
+				CampaignID:  campaign.ID,
+				Description: user.Username + " commented on the campaign",
+			}
+			if err := h.activities.Create(context.Background(), activity); err != nil {
+				h.logger.Warn("failed to record comment activity", zap.Error(err))
+			}
+		}()
+	}
 
 	c.JSON(http.StatusCreated, gin.H{"comment": comment})
 }

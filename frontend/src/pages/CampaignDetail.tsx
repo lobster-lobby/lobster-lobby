@@ -8,12 +8,14 @@ const AssetsTab = lazy(() => import('../components/assets/AssetsTab'))
 const DiscussionTab = lazy(() => import('../components/campaigns/tabs/DiscussionTab'))
 const MetricsTab = lazy(() => import('../components/campaigns/tabs/MetricsTab'))
 const TimelineTab = lazy(() => import('../components/campaigns/tabs/TimelineTab'))
+const ReachTab = lazy(() => import('../components/campaigns/tabs/ReachTab'))
 
-type TabId = 'assets' | 'discussion' | 'metrics' | 'timeline'
+type TabId = 'assets' | 'discussion' | 'reach' | 'metrics' | 'timeline'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'assets', label: 'Assets' },
   { id: 'discussion', label: 'Discussion' },
+  { id: 'reach', label: 'Reach' },
   { id: 'metrics', label: 'Metrics' },
   { id: 'timeline', label: 'Timeline' },
 ]
@@ -209,6 +211,7 @@ export default function CampaignDetail() {
           <Suspense fallback={<div className={styles.tabLoading}><Spinner size="lg" /></div>}>
             {activeTab === 'assets' && <AssetsTab campaignId={campaign.id} />}
             {activeTab === 'discussion' && <DiscussionTab campaignId={campaign.id} campaignCreatedBy={campaign.createdBy} />}
+            {activeTab === 'reach' && <ReachTab campaignId={campaign.id} />}
             {activeTab === 'metrics' && <MetricsTab campaignId={campaign.id} />}
             {activeTab === 'timeline' && <TimelineTab campaignId={campaign.id} />}
           </Suspense>
