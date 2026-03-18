@@ -3,6 +3,7 @@ package handlers
 import (
 	"embed"
 	"io/fs"
+	"log"
 	"net/http"
 	"strings"
 
@@ -12,18 +13,24 @@ import (
 //go:embed swagger-ui/*
 var swaggerUI embed.FS
 
+//go:embed docs/openapi.yaml
+var openAPISpec []byte
+
 // SwaggerDocs serves the Swagger UI and OpenAPI spec
-func SwaggerDocs(specPath string) gin.HandlerFunc {
+func SwaggerDocs() gin.HandlerFunc {
 	// Create sub-filesystem for swagger-ui
-	subFS, _ := fs.Sub(swaggerUI, "swagger-ui")
+	subFS, err := fs.Sub(swaggerUI, "swagger-ui")
+	if err != nil {
+		log.Fatalf("Failed to create swagger-ui sub-filesystem: %v", err)
+	}
 	fileServer := http.FileServer(http.FS(subFS))
 
 	return func(c *gin.Context) {
 		path := c.Param("filepath")
 
-		// Serve OpenAPI spec
+		// Serve embedded OpenAPI spec
 		if path == "/openapi.yaml" || path == "openapi.yaml" {
-			c.File(specPath)
+			c.Data(http.StatusOK, "application/yaml", openAPISpec)
 			return
 		}
 
@@ -35,8 +42,9 @@ func SwaggerDocs(specPath string) gin.HandlerFunc {
 			path = "index.html"
 		}
 
-		// Serve from embedded filesystem
-		c.Request.URL.Path = "/" + path
-		fileServer.ServeHTTP(c.Writer, c.Request)
+		// Serve from embedded filesystem using a cloned request to avoid mutating the original
+		req := c.Request.Clone(c.Request.Context())
+		req.URL.Path = "/" + path
+		fileServer.ServeHTTP(c.Writer, req)
 	}
 }

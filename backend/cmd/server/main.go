@@ -196,7 +196,7 @@ func main() {
 	r.GET("/api/health", handlers.Health)
 
 	// Swagger UI for API documentation
-	r.GET("/api/docs/*filepath", handlers.SwaggerDocs("docs/openapi.yaml"))
+	r.GET("/api/docs/*filepath", handlers.SwaggerDocs())
 
 	api := r.Group("/api")
 	{
