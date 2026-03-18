@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -21,9 +22,40 @@ type Representative struct {
 	SocialMedia map[string]string `bson:"socialMedia,omitempty" json:"socialMedia,omitempty"`
 	Chamber     string            `bson:"chamber" json:"chamber"` // senate, house, governor, local
 	Level       string            `bson:"level" json:"level"`     // federal, state, local
+	Bio         string            `bson:"bio,omitempty" json:"bio,omitempty"`
+	ContactInfo ContactInfo       `bson:"contactInfo,omitempty" json:"contactInfo,omitempty"`
 	ExternalIDs ExternalIDs       `bson:"externalIds,omitempty" json:"externalIds,omitempty"`
 	CreatedAt   time.Time         `bson:"createdAt" json:"createdAt"`
 	UpdatedAt   time.Time         `bson:"updatedAt" json:"updatedAt"`
+}
+
+// ContactInfo holds structured contact details for a representative
+type ContactInfo struct {
+	Phone   string `bson:"phone,omitempty" json:"phone,omitempty"`
+	Email   string `bson:"email,omitempty" json:"email,omitempty"`
+	Website string `bson:"website,omitempty" json:"website,omitempty"`
+	Office  string `bson:"office,omitempty" json:"office,omitempty"`
+}
+
+// Validate checks that required fields are present and valid
+func (r *Representative) Validate() error {
+	if len(r.Name) < 2 || len(r.Name) > 200 {
+		return errors.New("name must be between 2 and 200 characters")
+	}
+	if r.Party == "" {
+		return errors.New("party is required")
+	}
+	if r.State == "" {
+		return errors.New("state is required")
+	}
+	if r.Chamber == "" {
+		return errors.New("chamber is required")
+	}
+	validChambers := map[string]bool{"senate": true, "house": true, "governor": true, "local": true}
+	if !validChambers[r.Chamber] {
+		return errors.New("chamber must be one of: senate, house, governor, local")
+	}
+	return nil
 }
 
 // ExternalIDs holds various external identifiers for a representative

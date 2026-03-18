@@ -139,13 +139,17 @@ func main() {
 
 	nominationHandler := handlers.NewNominationHandler(nominationRepo, policyRepo, userRepo, logger)
 
-	// Representative lookup
+	// Representatives & voting records
 	repRepo := repository.NewRepresentativeRepository(mongo)
 	if err := repRepo.EnsureIndexes(bgCtx); err != nil {
 		logger.Warn("failed to ensure representative indexes", zap.Error(err))
 	}
+	votingRecordRepo := repository.NewVotingRecordRepository(mongo)
+	if err := votingRecordRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure voting record indexes", zap.Error(err))
+	}
 	repSvc := services.NewRepresentativeService(repRepo, cfg.GoogleCivicAPIKey)
-	repHandler := handlers.NewRepresentativeHandler(repSvc)
+	repHandler := handlers.NewRepresentativeHandler(repRepo, votingRecordRepo, repSvc, logger)
 
 	// Campaign assets
 	assetRepo := repository.NewAssetRepository(mongo)
@@ -302,9 +306,18 @@ func main() {
 		api.GET("/bookmarks", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.BookmarkList)
 		api.GET("/dashboard", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), dashboardHandler.Dashboard)
 
-		// Representative lookup routes (no auth required for reads)
-		api.GET("/representatives", repHandler.List)
-		api.GET("/representatives/:id", repHandler.GetByID)
+		// Representative routes
+		reps := api.Group("/representatives")
+		reps.Use(middleware.RateLimit(rateLimiter))
+		{
+			reps.GET("", repHandler.List)
+			reps.POST("", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), middleware.RequireAdmin(userRepo), repHandler.Create)
+			reps.GET("/:id", repHandler.GetByID)
+			reps.PUT("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), middleware.RequireAdmin(userRepo), repHandler.Update)
+			reps.DELETE("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), middleware.RequireAdmin(userRepo), repHandler.Delete)
+			reps.GET("/:id/votes", repHandler.ListVotes)
+			reps.POST("/:id/votes", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), middleware.RequireAdmin(userRepo), repHandler.RecordVote)
+		}
 
 		keys := api.Group("/keys")
 		keys.Use(middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc))
