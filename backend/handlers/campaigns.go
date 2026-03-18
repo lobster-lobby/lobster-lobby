@@ -61,7 +61,11 @@ func (h *CampaignHandler) Create(c *gin.Context) {
 		return
 	}
 
-	userIDStr, _ := c.Get(middleware.ContextUserID)
+	userIDStr, exists := c.Get(middleware.ContextUserID)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		return
+	}
 	userID, err := bson.ObjectIDFromHex(userIDStr.(string))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})
@@ -207,7 +211,11 @@ func (h *CampaignHandler) Get(c *gin.Context) {
 func (h *CampaignHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 
-	userIDStr, _ := c.Get(middleware.ContextUserID)
+	userIDStr, exists := c.Get(middleware.ContextUserID)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		return
+	}
 	userID, err := bson.ObjectIDFromHex(userIDStr.(string))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})
@@ -313,7 +321,11 @@ func (h *CampaignHandler) Update(c *gin.Context) {
 func (h *CampaignHandler) UpdateStatus(c *gin.Context) {
 	idStr := c.Param("id")
 
-	userIDStr, _ := c.Get(middleware.ContextUserID)
+	userIDStr, exists := c.Get(middleware.ContextUserID)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		return
+	}
 	userID, err := bson.ObjectIDFromHex(userIDStr.(string))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})

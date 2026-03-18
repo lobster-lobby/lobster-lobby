@@ -50,7 +50,7 @@ function CommentItem({
       style={{ marginLeft: depth > 0 ? 'var(--ll-space-lg)' : 0 }}
     >
       <div className={styles.commentHeader}>
-        <span className={styles.avatar}>{comment.authorName.slice(0, 2).toUpperCase()}</span>
+        <span className={styles.avatar}>{(comment.authorName || '?').slice(0, 2).toUpperCase()}</span>
         <span className={styles.author}>{comment.authorName}</span>
         <span className={styles.time}>{relativeTime(comment.createdAt)}</span>
         {comment.pinned && <span className={styles.pinBadge}>Pinned</span>}

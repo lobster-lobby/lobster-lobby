@@ -348,8 +348,16 @@ func (h *CampaignCommentHandler) TogglePin(c *gin.Context) {
 	}
 
 	// Only campaign creator or admin can pin
-	userIDStr, _ := c.Get(middleware.ContextUserID)
-	userID, _ := bson.ObjectIDFromHex(userIDStr.(string))
+	userIDStr, exists := c.Get(middleware.ContextUserID)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		return
+	}
+	userID, err := bson.ObjectIDFromHex(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id"})
+		return
+	}
 
 	isCreator := campaign.CreatedBy == userID
 	isAdmin := false
