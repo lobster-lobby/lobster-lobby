@@ -16,6 +16,8 @@ export interface CampaignCardData {
     assetCount: number
     commentCount: number
   }
+  supporterCount?: number
+  supporterGoal?: number
   trendingScore: number
   createdAt: string
   creatorName?: string
@@ -65,9 +67,23 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
         </div>
       )}
 
+      {campaign.supporterGoal && campaign.supporterGoal > 0 && (
+        <div className={styles.progressWrapper}>
+          <div className={styles.progressBar}>
+            <div
+              className={styles.progressFill}
+              style={{ width: `${Math.min(100, ((campaign.supporterCount ?? supporters) / campaign.supporterGoal) * 100)}%` }}
+            />
+          </div>
+          <span className={styles.progressText}>
+            {campaign.supporterCount ?? supporters} / {campaign.supporterGoal} supporters
+          </span>
+        </div>
+      )}
+
       <div className={styles.stats}>
         <div className={styles.stat}>
-          <span className={styles.statValue}>{supporters}</span>
+          <span className={styles.statValue}>{campaign.supporterCount ?? supporters}</span>
           <span className={styles.statLabel}>supporters</span>
         </div>
         <div className={styles.stat}>

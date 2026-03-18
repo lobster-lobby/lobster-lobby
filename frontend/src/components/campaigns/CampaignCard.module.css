@@ -83,6 +83,30 @@
   text-overflow: ellipsis;
 }
 
+.progressWrapper {
+  margin-bottom: var(--ll-space-sm);
+}
+
+.progressBar {
+  height: 6px;
+  background: var(--ll-bg-tertiary);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: var(--ll-space-xs);
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--ll-primary);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-size: 0.75rem;
+  color: var(--ll-text-muted);
+}
+
 .stats {
   display: flex;
   gap: var(--ll-space-lg);

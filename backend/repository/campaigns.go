@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"math"
+	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -156,10 +157,11 @@ func (r *CampaignRepository) List(ctx context.Context, opts CampaignListOpts) ([
 		}
 	}
 	if opts.Search != "" {
+		escaped := regexp.QuoteMeta(opts.Search)
 		filter["$or"] = []bson.M{
-			{"title": bson.M{"$regex": opts.Search, "$options": "i"}},
-			{"objective": bson.M{"$regex": opts.Search, "$options": "i"}},
-			{"description": bson.M{"$regex": opts.Search, "$options": "i"}},
+			{"title": bson.M{"$regex": escaped, "$options": "i"}},
+			{"objective": bson.M{"$regex": escaped, "$options": "i"}},
+			{"description": bson.M{"$regex": escaped, "$options": "i"}},
 		}
 	}
 
