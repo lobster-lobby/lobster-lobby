@@ -22,7 +22,7 @@ import UserProfile from './pages/UserProfile'
 import Debates from './pages/Debates'
 import DebateDetail from './pages/DebateDetail'
 import AdminModeration from './pages/AdminModeration'
-import NotFound from './pages/NotFound'
+import NotFoundPage from './pages/NotFoundPage/NotFoundPage'
 import './styles/global.css'
 
 export default function App() {
@@ -85,7 +85,7 @@ export default function App() {
               }
             />
             <Route path="/u/:username" element={<UserProfile />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
       </AuthProvider>

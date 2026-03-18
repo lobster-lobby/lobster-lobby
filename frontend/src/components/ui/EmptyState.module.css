@@ -7,6 +7,12 @@
   text-align: center;
 }
 
+.lobsterDecor {
+  font-size: 2rem;
+  margin-bottom: var(--ll-space-sm);
+  opacity: 0.6;
+}
+
 .illustration {
   display: flex;
   align-items: center;
@@ -35,4 +41,25 @@
 
 .action {
   margin-top: var(--ll-space-md);
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ll-space-sm) var(--ll-space-lg);
+  background: var(--ll-primary);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: var(--ll-font);
+  border: none;
+  border-radius: var(--ll-radius-md);
+  cursor: pointer;
+  transition: background 150ms ease;
+  min-height: 44px;
+}
+
+.actionButton:hover {
+  background: var(--ll-primary-hover);
 }
