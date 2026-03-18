@@ -159,6 +159,7 @@ func (h *CampaignHandler) List(c *gin.Context) {
 		Sort:     c.DefaultQuery("sort", "trending"),
 		Status:   c.Query("status"),
 		PolicyID: c.Query("policyId"),
+		Search:   c.Query("q"),
 	}
 
 	campaigns, total, err := h.campaigns.List(c, opts)

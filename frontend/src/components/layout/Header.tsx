@@ -86,6 +86,13 @@ export function Header() {
                     Representatives
                   </Link>
                   <Link
+                    to="/campaigns"
+                    className={styles.dropdownItem}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Campaigns
+                  </Link>
+                  <Link
                     to="/settings"
                     className={styles.dropdownItem}
                     onClick={() => setMenuOpen(false)}

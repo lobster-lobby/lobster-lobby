@@ -26,6 +26,7 @@ type CampaignListOpts struct {
 	Sort     string // "trending", "newest", "participants", "shares"
 	Status   string
 	PolicyID string
+	Search   string
 }
 
 func (r *CampaignRepository) EnsureIndexes(ctx context.Context) error {
@@ -152,6 +153,13 @@ func (r *CampaignRepository) List(ctx context.Context, opts CampaignListOpts) ([
 	if opts.PolicyID != "" {
 		if oid, err := bson.ObjectIDFromHex(opts.PolicyID); err == nil {
 			filter["policyId"] = oid
+		}
+	}
+	if opts.Search != "" {
+		filter["$or"] = []bson.M{
+			{"title": bson.M{"$regex": opts.Search, "$options": "i"}},
+			{"objective": bson.M{"$regex": opts.Search, "$options": "i"}},
+			{"description": bson.M{"$regex": opts.Search, "$options": "i"}},
 		}
 	}
 

@@ -14,6 +14,7 @@ import Search from './pages/Search'
 import Bookmarks from './pages/Bookmarks'
 import Representatives from './pages/Representatives'
 import RepresentativeDetail from './pages/RepresentativeDetail'
+import Campaigns from './pages/Campaigns'
 import CampaignDetail from './pages/CampaignDetail'
 import Dashboard from './pages/Dashboard'
 import Settings from './pages/Settings'
@@ -57,6 +58,7 @@ export default function App() {
             <Route path="/representatives/:id" element={<RepresentativeDetail />} />
             <Route path="/debates" element={<Debates />} />
             <Route path="/debates/:slug" element={<DebateDetail />} />
+            <Route path="/campaigns" element={<Campaigns />} />
             <Route path="/campaigns/:slug" element={<CampaignDetail />} />
             <Route
               path="/dashboard"
