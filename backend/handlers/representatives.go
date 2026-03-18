@@ -18,6 +18,7 @@ import (
 type RepresentativeStore interface {
 	Create(ctx context.Context, rep *models.Representative) error
 	FindByID(ctx context.Context, id bson.ObjectID) (*models.Representative, error)
+	FindByIDs(ctx context.Context, ids []bson.ObjectID) ([]models.Representative, error)
 	Update(ctx context.Context, id bson.ObjectID, updates bson.M) error
 	Delete(ctx context.Context, id bson.ObjectID) error
 	List(ctx context.Context, opts repository.RepListOpts) ([]models.Representative, int64, error)
@@ -27,7 +28,9 @@ type RepresentativeStore interface {
 type VotingRecordStore interface {
 	Create(ctx context.Context, vr *models.VotingRecord) error
 	FindByRepresentative(ctx context.Context, repID bson.ObjectID, opts repository.VoteListOpts) ([]models.VotingRecord, int64, error)
+	FindByPolicy(ctx context.Context, policyID bson.ObjectID, opts repository.VoteListOpts) ([]models.VotingRecord, int64, error)
 	GetSummary(ctx context.Context, repID bson.ObjectID) (*models.VotingSummary, error)
+	GetPolicySummary(ctx context.Context, policyID bson.ObjectID) (*models.VotingSummary, error)
 }
 
 // CivicLookupService abstracts the Google Civic API lookup.
@@ -372,4 +375,77 @@ func (h *RepresentativeHandler) RecordVote(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, vr)
+}
+
+// ListVotesByPolicy handles GET /api/policies/:id/votes — voting records for a policy with representative details
+func (h *RepresentativeHandler) ListVotesByPolicy(c *gin.Context) {
+	idStr := c.Param("id")
+	policyID, err := bson.ObjectIDFromHex(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid policy id"})
+		return
+	}
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	perPage, _ := strconv.Atoi(c.DefaultQuery("perPage", "50"))
+
+	records, total, err := h.votes.FindByPolicy(c, policyID, repository.VoteListOpts{
+		Page:    page,
+		PerPage: perPage,
+	})
+	if err != nil {
+		h.logger.Error("failed to list policy voting records", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list voting records"})
+		return
+	}
+
+	summary, err := h.votes.GetPolicySummary(c, policyID)
+	if err != nil {
+		h.logger.Error("failed to get policy voting summary", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get voting summary"})
+		return
+	}
+
+	// Resolve representative details via batch query
+	type VoteWithRep struct {
+		models.VotingRecord
+		Representative *models.Representative `json:"representative,omitempty"`
+	}
+
+	// Collect unique rep IDs
+	seen := make(map[bson.ObjectID]struct{})
+	var repIDs []bson.ObjectID
+	for _, rec := range records {
+		if _, ok := seen[rec.RepresentativeID]; !ok {
+			seen[rec.RepresentativeID] = struct{}{}
+			repIDs = append(repIDs, rec.RepresentativeID)
+		}
+	}
+
+	// Batch fetch all representatives
+	repMap := make(map[bson.ObjectID]*models.Representative)
+	if len(repIDs) > 0 {
+		reps, err := h.reps.FindByIDs(c, repIDs)
+		if err == nil {
+			for i := range reps {
+				repMap[reps[i].ID] = &reps[i]
+			}
+		}
+	}
+
+	enriched := make([]VoteWithRep, len(records))
+	for i, rec := range records {
+		enriched[i] = VoteWithRep{VotingRecord: rec}
+		if rep, ok := repMap[rec.RepresentativeID]; ok {
+			enriched[i].Representative = rep
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"votes":   enriched,
+		"summary": summary,
+		"total":   total,
+		"page":    page,
+		"perPage": perPage,
+	})
 }

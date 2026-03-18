@@ -40,6 +40,26 @@ func (r *RepresentativeRepository) FindByID(ctx context.Context, id bson.ObjectI
 	return &rep, err
 }
 
+func (r *RepresentativeRepository) FindByIDs(ctx context.Context, ids []bson.ObjectID) ([]models.Representative, error) {
+	if len(ids) == 0 {
+		return []models.Representative{}, nil
+	}
+	cursor, err := r.coll.Find(ctx, bson.M{"_id": bson.M{"$in": ids}})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var reps []models.Representative
+	if err := cursor.All(ctx, &reps); err != nil {
+		return nil, err
+	}
+	if reps == nil {
+		reps = []models.Representative{}
+	}
+	return reps, nil
+}
+
 func (r *RepresentativeRepository) FindByState(ctx context.Context, state string) ([]models.Representative, error) {
 	cursor, err := r.coll.Find(ctx, bson.M{"state": state})
 	if err != nil {

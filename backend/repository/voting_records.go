@@ -85,9 +85,45 @@ func (r *VotingRecordRepository) FindByRepresentative(ctx context.Context, repID
 	return records, total, nil
 }
 
-func (r *VotingRecordRepository) GetSummary(ctx context.Context, repID bson.ObjectID) (*models.VotingSummary, error) {
+func (r *VotingRecordRepository) FindByPolicy(ctx context.Context, policyID bson.ObjectID, opts VoteListOpts) ([]models.VotingRecord, int64, error) {
+	if opts.Page < 1 {
+		opts.Page = 1
+	}
+	if opts.PerPage < 1 || opts.PerPage > 100 {
+		opts.PerPage = 20
+	}
+
+	filter := bson.M{"policyId": policyID}
+
+	total, err := r.coll.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	findOpts := options.Find().
+		SetSort(bson.M{"date": -1}).
+		SetSkip(int64((opts.Page - 1) * opts.PerPage)).
+		SetLimit(int64(opts.PerPage))
+
+	cursor, err := r.coll.Find(ctx, filter, findOpts)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var records []models.VotingRecord
+	if err := cursor.All(ctx, &records); err != nil {
+		return nil, 0, err
+	}
+	if records == nil {
+		records = []models.VotingRecord{}
+	}
+	return records, total, nil
+}
+
+func (r *VotingRecordRepository) votingSummaryByFilter(ctx context.Context, filter bson.M) (*models.VotingSummary, error) {
 	pipeline := bson.A{
-		bson.M{"$match": bson.M{"representativeId": repID}},
+		bson.M{"$match": filter},
 		bson.M{"$group": bson.M{
 			"_id":          nil,
 			"totalVotes":   bson.M{"$sum": 1},
@@ -131,4 +167,12 @@ func (r *VotingRecordRepository) GetSummary(ctx context.Context, repID bson.Obje
 		}
 	}
 	return summary, nil
+}
+
+func (r *VotingRecordRepository) GetPolicySummary(ctx context.Context, policyID bson.ObjectID) (*models.VotingSummary, error) {
+	return r.votingSummaryByFilter(ctx, bson.M{"policyId": policyID})
+}
+
+func (r *VotingRecordRepository) GetSummary(ctx context.Context, repID bson.ObjectID) (*models.VotingSummary, error) {
+	return r.votingSummaryByFilter(ctx, bson.M{"representativeId": repID})
 }

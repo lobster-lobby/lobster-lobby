@@ -55,6 +55,16 @@ func (m *mockRepStore) FindByID(_ context.Context, id bson.ObjectID) (*models.Re
 	return m.rep, nil
 }
 
+func (m *mockRepStore) FindByIDs(_ context.Context, ids []bson.ObjectID) ([]models.Representative, error) {
+	if m.findErr != nil {
+		return nil, m.findErr
+	}
+	if m.rep != nil {
+		return []models.Representative{*m.rep}, nil
+	}
+	return []models.Representative{}, nil
+}
+
 func (m *mockRepStore) Update(_ context.Context, id bson.ObjectID, updates bson.M) error {
 	m.updatedID = id
 	m.updatedM = updates
@@ -101,7 +111,21 @@ func (m *mockVoteStore) FindByRepresentative(_ context.Context, _ bson.ObjectID,
 	return m.records, m.total, nil
 }
 
+func (m *mockVoteStore) FindByPolicy(_ context.Context, _ bson.ObjectID, _ repository.VoteListOpts) ([]models.VotingRecord, int64, error) {
+	if m.findErr != nil {
+		return nil, 0, m.findErr
+	}
+	return m.records, m.total, nil
+}
+
 func (m *mockVoteStore) GetSummary(_ context.Context, _ bson.ObjectID) (*models.VotingSummary, error) {
+	if m.summErr != nil {
+		return nil, m.summErr
+	}
+	return m.summary, nil
+}
+
+func (m *mockVoteStore) GetPolicySummary(_ context.Context, _ bson.ObjectID) (*models.VotingSummary, error) {
 	if m.summErr != nil {
 		return nil, m.summErr
 	}

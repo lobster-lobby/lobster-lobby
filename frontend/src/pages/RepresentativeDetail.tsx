@@ -1,8 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import type { Representative, VotingSummary, VotingRecord } from '../types/representative'
 import { Pagination } from '../components/ui'
 import styles from './RepresentativeDetail.module.css'
+
+interface PolicyInfo {
+  id: string
+  title: string
+  slug: string
+  type: 'existing_law' | 'active_bill' | 'proposed'
+}
 
 export default function RepresentativeDetail() {
   const { id } = useParams<{ id: string }>()
@@ -14,16 +21,11 @@ export default function RepresentativeDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState(false)
+  const [policyMap, setPolicyMap] = useState<Record<string, PolicyInfo>>({})
+  const policyMapRef = useRef(policyMap)
+  policyMapRef.current = policyMap
 
   const perPage = 20
-
-  useEffect(() => {
-    fetchProfile()
-  }, [id])
-
-  useEffect(() => {
-    if (id) fetchVotes()
-  }, [id, votesPage])
 
   const fetchProfile = async () => {
     setLoading(true)
@@ -44,7 +46,7 @@ export default function RepresentativeDetail() {
     }
   }
 
-  const fetchVotes = async () => {
+  const fetchVotes = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         page: String(votesPage),
@@ -53,12 +55,40 @@ export default function RepresentativeDetail() {
       const res = await fetch(`/api/representatives/${id}/votes?${params}`)
       if (!res.ok) return
       const data = await res.json()
-      setVotes(data.votes || [])
+      const votesList: VotingRecord[] = data.votes || []
+      setVotes(votesList)
       setVotesTotal(data.total || 0)
+
+      // Fetch policy info for each unique policyId not already cached
+      const currentMap = policyMapRef.current
+      const uniqueIds = [...new Set(votesList.map(v => v.policyId))].filter(pid => !currentMap[pid])
+      if (uniqueIds.length > 0) {
+        const results = await Promise.allSettled(
+          uniqueIds.map(pid =>
+            fetch(`/api/policies/${pid}`).then(r => r.ok ? r.json() : null)
+          )
+        )
+        const newMap: Record<string, PolicyInfo> = { ...currentMap }
+        results.forEach((result, i) => {
+          if (result.status === 'fulfilled' && result.value?.policy) {
+            const p = result.value.policy
+            newMap[uniqueIds[i]] = { id: p.id, title: p.title, slug: p.slug, type: p.type }
+          }
+        })
+        setPolicyMap(newMap)
+      }
     } catch {
       // fail silently
     }
-  }
+  }, [id, votesPage])
+
+  useEffect(() => {
+    fetchProfile()
+  }, [id])
+
+  useEffect(() => {
+    if (id) fetchVotes()
+  }, [id, fetchVotes])
 
   const getPartyClass = (p: string) => {
     const lower = p?.toLowerCase() || ''
@@ -207,6 +237,10 @@ export default function RepresentativeDetail() {
               <div className={styles.statValue}>{summary.abstainPercent.toFixed(1)}%</div>
               <div className={styles.statLabel}>Abstain ({summary.abstainCount})</div>
             </div>
+            <div className={`${styles.statCard} ${styles.statAbsent}`}>
+              <div className={styles.statValue}>{summary.absentCount}</div>
+              <div className={styles.statLabel}>Absent</div>
+            </div>
           </div>
         </section>
       )}
@@ -222,6 +256,7 @@ export default function RepresentativeDetail() {
               <table className={styles.table}>
                 <thead>
                   <tr>
+                    <th>Policy</th>
                     <th>Date</th>
                     <th>Session</th>
                     <th>Vote</th>
@@ -229,18 +264,35 @@ export default function RepresentativeDetail() {
                   </tr>
                 </thead>
                 <tbody>
-                  {votes.map((vote) => (
-                    <tr key={vote.id}>
-                      <td>{formatDate(vote.date)}</td>
-                      <td>{vote.session}</td>
-                      <td>
-                        <span className={`${styles.voteBadge} ${getVoteClass(vote.vote)}`}>
-                          {vote.vote.toUpperCase()}
-                        </span>
-                      </td>
-                      <td>{vote.notes || '—'}</td>
-                    </tr>
-                  ))}
+                  {votes.map((vote) => {
+                    const policy = policyMap[vote.policyId]
+                    return (
+                      <tr key={vote.id}>
+                        <td>
+                          {policy ? (
+                            <div>
+                              <Link to={`/policies/${policy.slug}`} className={styles.policyLink}>
+                                {policy.title}
+                              </Link>
+                              <span className={`${styles.typeBadge} ${styles[`type_${policy.type}`] || ''}`}>
+                                {policy.type === 'existing_law' ? 'Law' : policy.type === 'active_bill' ? 'Bill' : 'Proposed'}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className={styles.policyIdFallback}>{vote.policyId}</span>
+                          )}
+                        </td>
+                        <td>{formatDate(vote.date)}</td>
+                        <td>{vote.session || '—'}</td>
+                        <td>
+                          <span className={`${styles.voteBadge} ${getVoteClass(vote.vote)}`}>
+                            {vote.vote.toUpperCase()}
+                          </span>
+                        </td>
+                        <td>{vote.notes || '—'}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
