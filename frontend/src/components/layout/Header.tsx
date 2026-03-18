@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import { useTheme } from '../../contexts/ThemeContext'
 import { SearchBar } from '../ui'
 import styles from './Header.module.css'
 
 export function Header() {
   const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const isAuthenticated = !!user
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -84,6 +86,14 @@ export function Header() {
                     Settings
                   </Link>
                   <div className={styles.dropdownDivider} />
+                  <button
+                    className={styles.dropdownItem}
+                    onClick={toggleTheme}
+                  >
+                    <span className={styles.themeToggleRow}>
+                      {theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode'}
+                    </span>
+                  </button>
                   <button
                     className={styles.dropdownItem}
                     onClick={() => {

@@ -15,6 +15,7 @@
   width: 100%;
   padding: var(--ll-space-sm) var(--ll-space-md);
   padding-left: calc(var(--ll-space-md) + 20px + var(--ll-space-sm));
+  min-height: 44px;
   font-size: 1rem;
   font-family: var(--ll-font);
   color: var(--ll-text);

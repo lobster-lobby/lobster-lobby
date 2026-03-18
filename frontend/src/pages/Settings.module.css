@@ -1,0 +1,91 @@
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--ll-space-xl) var(--ll-space-md);
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ll-text);
+  margin-bottom: var(--ll-space-xs);
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: var(--ll-text-secondary);
+  margin-bottom: var(--ll-space-xl);
+}
+
+.section {
+  margin-bottom: var(--ll-space-xl);
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ll-text);
+  margin-bottom: var(--ll-space-sm);
+}
+
+.card {
+  background: var(--ll-bg-card);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-md);
+  padding: var(--ll-space-md);
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ll-space-md);
+}
+
+.settingInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settingLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ll-text);
+}
+
+.settingDesc {
+  font-size: 0.8125rem;
+  color: var(--ll-text-muted);
+}
+
+.themeSwitch {
+  display: flex;
+  gap: var(--ll-space-xs);
+  background: var(--ll-bg-elevated);
+  border-radius: var(--ll-radius-md);
+  padding: 3px;
+}
+
+.themeOption {
+  padding: var(--ll-space-xs) var(--ll-space-sm);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: var(--ll-font);
+  color: var(--ll-text-secondary);
+  border: none;
+  border-radius: var(--ll-radius-sm);
+  background: none;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.themeOption:hover {
+  color: var(--ll-text);
+}
+
+.themeOptionActive {
+  background: var(--ll-bg-card);
+  color: var(--ll-text);
+  box-shadow: var(--ll-shadow-sm);
+}

@@ -80,6 +80,7 @@
   align-items: center;
   gap: var(--ll-space-xs);
   padding: var(--ll-space-xs) var(--ll-space-sm);
+  min-height: 44px;
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--ll-primary);
@@ -169,6 +170,7 @@
   font-size: 0.875rem;
   color: var(--ll-text);
   cursor: pointer;
+  min-height: 44px;
 }
 
 .checkbox input[type="checkbox"] {
@@ -203,7 +205,8 @@
 .tagChip {
   display: inline-flex;
   align-items: center;
-  padding: 2px var(--ll-space-sm);
+  padding: var(--ll-space-xs) var(--ll-space-sm);
+  min-height: 44px;
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--ll-text-secondary);
@@ -340,8 +343,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     font-size: 1.25rem;
     color: var(--ll-text-muted);
     background: var(--ll-bg-elevated);
@@ -378,4 +381,11 @@
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawerOverlay,
+  .drawer {
+    animation: none;
+  }
 }

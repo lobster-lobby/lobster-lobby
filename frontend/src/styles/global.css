@@ -16,6 +16,12 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html *,
+html *::before,
+html *::after {
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
 body {
   font-family: var(--ll-font);
   color: var(--ll-text);

@@ -59,8 +59,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--ll-radius-full);
   background: var(--ll-primary);
   color: white;
@@ -116,6 +116,7 @@
   display: block;
   width: 100%;
   padding: var(--ll-space-sm) var(--ll-space-md);
+  min-height: 44px;
   font-size: 0.875rem;
   font-family: var(--ll-font);
   color: var(--ll-text);
@@ -166,4 +167,16 @@
 
 .registerLink:hover {
   background: var(--ll-primary-hover);
+}
+
+.themeToggleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-sm);
+}
+
+@media (max-width: 768px) {
+  .logoText {
+    font-size: 1rem;
+  }
 }
