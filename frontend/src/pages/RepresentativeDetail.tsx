@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import type { Representative, VotingSummary, VotingRecord } from '../types/representative'
 import { Pagination } from '../components/ui'
@@ -22,6 +22,8 @@ export default function RepresentativeDetail() {
   const [error, setError] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState(false)
   const [policyMap, setPolicyMap] = useState<Record<string, PolicyInfo>>({})
+  const policyMapRef = useRef(policyMap)
+  policyMapRef.current = policyMap
 
   const perPage = 20
 
@@ -58,14 +60,15 @@ export default function RepresentativeDetail() {
       setVotesTotal(data.total || 0)
 
       // Fetch policy info for each unique policyId not already cached
-      const uniqueIds = [...new Set(votesList.map(v => v.policyId))].filter(pid => !policyMap[pid])
+      const currentMap = policyMapRef.current
+      const uniqueIds = [...new Set(votesList.map(v => v.policyId))].filter(pid => !currentMap[pid])
       if (uniqueIds.length > 0) {
         const results = await Promise.allSettled(
           uniqueIds.map(pid =>
             fetch(`/api/policies/${pid}`).then(r => r.ok ? r.json() : null)
           )
         )
-        const newMap: Record<string, PolicyInfo> = { ...policyMap }
+        const newMap: Record<string, PolicyInfo> = { ...currentMap }
         results.forEach((result, i) => {
           if (result.status === 'fulfilled' && result.value?.policy) {
             const p = result.value.policy
@@ -77,7 +80,7 @@ export default function RepresentativeDetail() {
     } catch {
       // fail silently
     }
-  }, [id, votesPage, policyMap])
+  }, [id, votesPage])
 
   useEffect(() => {
     fetchProfile()

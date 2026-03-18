@@ -222,6 +222,9 @@
 .statAbstain { background: #fff3e0; }
 .statAbstain .statValue { color: #e65100; }
 
+.statAbsent { background: #f5f5f5; }
+.statAbsent .statValue { color: #757575; }
+
 /* Table */
 .tableWrapper {
   overflow-x: auto;
@@ -340,6 +343,10 @@
 
 [data-theme="dark"] .statAbstain {
   background: rgba(230, 81, 0, 0.15);
+}
+
+[data-theme="dark"] .statAbsent {
+  background: rgba(117, 117, 117, 0.15);
 }
 
 [data-theme="dark"] .voteYea {
