@@ -121,9 +121,9 @@ func (r *VotingRecordRepository) FindByPolicy(ctx context.Context, policyID bson
 	return records, total, nil
 }
 
-func (r *VotingRecordRepository) GetPolicySummary(ctx context.Context, policyID bson.ObjectID) (*models.VotingSummary, error) {
+func (r *VotingRecordRepository) votingSummaryByFilter(ctx context.Context, filter bson.M) (*models.VotingSummary, error) {
 	pipeline := bson.A{
-		bson.M{"$match": bson.M{"policyId": policyID}},
+		bson.M{"$match": filter},
 		bson.M{"$group": bson.M{
 			"_id":          nil,
 			"totalVotes":   bson.M{"$sum": 1},
@@ -169,50 +169,10 @@ func (r *VotingRecordRepository) GetPolicySummary(ctx context.Context, policyID 
 	return summary, nil
 }
 
+func (r *VotingRecordRepository) GetPolicySummary(ctx context.Context, policyID bson.ObjectID) (*models.VotingSummary, error) {
+	return r.votingSummaryByFilter(ctx, bson.M{"policyId": policyID})
+}
+
 func (r *VotingRecordRepository) GetSummary(ctx context.Context, repID bson.ObjectID) (*models.VotingSummary, error) {
-	pipeline := bson.A{
-		bson.M{"$match": bson.M{"representativeId": repID}},
-		bson.M{"$group": bson.M{
-			"_id":          nil,
-			"totalVotes":   bson.M{"$sum": 1},
-			"yeaCount":     bson.M{"$sum": bson.M{"$cond": bson.A{bson.M{"$eq": bson.A{"$vote", "yea"}}, 1, 0}}},
-			"nayCount":     bson.M{"$sum": bson.M{"$cond": bson.A{bson.M{"$eq": bson.A{"$vote", "nay"}}, 1, 0}}},
-			"abstainCount": bson.M{"$sum": bson.M{"$cond": bson.A{bson.M{"$eq": bson.A{"$vote", "abstain"}}, 1, 0}}},
-			"absentCount":  bson.M{"$sum": bson.M{"$cond": bson.A{bson.M{"$eq": bson.A{"$vote", "absent"}}, 1, 0}}},
-		}},
-	}
-
-	cursor, err := r.coll.Aggregate(ctx, pipeline)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
-	var results []struct {
-		TotalVotes   int `bson:"totalVotes"`
-		YeaCount     int `bson:"yeaCount"`
-		NayCount     int `bson:"nayCount"`
-		AbstainCount int `bson:"abstainCount"`
-		AbsentCount  int `bson:"absentCount"`
-	}
-	if err := cursor.All(ctx, &results); err != nil {
-		return nil, err
-	}
-
-	summary := &models.VotingSummary{}
-	if len(results) > 0 {
-		res := results[0]
-		summary.TotalVotes = res.TotalVotes
-		summary.YeaCount = res.YeaCount
-		summary.NayCount = res.NayCount
-		summary.AbstainCount = res.AbstainCount
-		summary.AbsentCount = res.AbsentCount
-		if summary.TotalVotes > 0 {
-			total := float64(summary.TotalVotes)
-			summary.YeaPercent = float64(summary.YeaCount) / total * 100
-			summary.NayPercent = float64(summary.NayCount) / total * 100
-			summary.AbstainPercent = float64(summary.AbstainCount) / total * 100
-		}
-	}
-	return summary, nil
+	return r.votingSummaryByFilter(ctx, bson.M{"representativeId": repID})
 }

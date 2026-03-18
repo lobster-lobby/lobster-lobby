@@ -1,19 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '../ui'
-import type { Representative, VotingSummary } from '../../types/representative'
+import type { Representative, VotingSummary, VotingRecord } from '../../types/representative'
 import styles from './RepresentativesTab.module.css'
 
-interface VoteWithRep {
-  id: string
-  representativeId: string
-  policyId: string
-  vote: 'yea' | 'nay' | 'abstain' | 'absent'
-  date: string
-  session: string
-  notes?: string
-  representative?: Representative
-}
+type VoteWithRep = VotingRecord & { representative?: Representative }
 
 interface RepresentativesTabProps {
   policyId: string
@@ -137,6 +128,9 @@ export default function RepresentativesTab({ policyId }: RepresentativesTabProps
             </span>
             <span className={`${styles.summaryItem} ${styles.summaryAbstain}`}>
               {summary.abstainCount} abstain
+            </span>
+            <span className={`${styles.summaryItem} ${styles.summaryAbsent}`}>
+              {summary.absentCount} absent
             </span>
           </div>
         </Card>

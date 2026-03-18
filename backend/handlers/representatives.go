@@ -18,6 +18,7 @@ import (
 type RepresentativeStore interface {
 	Create(ctx context.Context, rep *models.Representative) error
 	FindByID(ctx context.Context, id bson.ObjectID) (*models.Representative, error)
+	FindByIDs(ctx context.Context, ids []bson.ObjectID) ([]models.Representative, error)
 	Update(ctx context.Context, id bson.ObjectID, updates bson.M) error
 	Delete(ctx context.Context, id bson.ObjectID) error
 	List(ctx context.Context, opts repository.RepListOpts) ([]models.Representative, int64, error)
@@ -405,17 +406,37 @@ func (h *RepresentativeHandler) ListVotesByPolicy(c *gin.Context) {
 		return
 	}
 
-	// Resolve representative details for each vote
+	// Resolve representative details via batch query
 	type VoteWithRep struct {
 		models.VotingRecord
 		Representative *models.Representative `json:"representative,omitempty"`
 	}
 
+	// Collect unique rep IDs
+	seen := make(map[bson.ObjectID]struct{})
+	var repIDs []bson.ObjectID
+	for _, rec := range records {
+		if _, ok := seen[rec.RepresentativeID]; !ok {
+			seen[rec.RepresentativeID] = struct{}{}
+			repIDs = append(repIDs, rec.RepresentativeID)
+		}
+	}
+
+	// Batch fetch all representatives
+	repMap := make(map[bson.ObjectID]*models.Representative)
+	if len(repIDs) > 0 {
+		reps, err := h.reps.FindByIDs(c, repIDs)
+		if err == nil {
+			for i := range reps {
+				repMap[reps[i].ID] = &reps[i]
+			}
+		}
+	}
+
 	enriched := make([]VoteWithRep, len(records))
 	for i, rec := range records {
 		enriched[i] = VoteWithRep{VotingRecord: rec}
-		rep, err := h.reps.FindByID(c, rec.RepresentativeID)
-		if err == nil && rep != nil {
+		if rep, ok := repMap[rec.RepresentativeID]; ok {
 			enriched[i].Representative = rep
 		}
 	}

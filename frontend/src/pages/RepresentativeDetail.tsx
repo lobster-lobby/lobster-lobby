@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import type { Representative, VotingSummary, VotingRecord } from '../types/representative'
 import { Pagination } from '../components/ui'
@@ -25,14 +25,6 @@ export default function RepresentativeDetail() {
 
   const perPage = 20
 
-  useEffect(() => {
-    fetchProfile()
-  }, [id])
-
-  useEffect(() => {
-    if (id) fetchVotes()
-  }, [id, votesPage])
-
   const fetchProfile = async () => {
     setLoading(true)
     setError(null)
@@ -52,7 +44,7 @@ export default function RepresentativeDetail() {
     }
   }
 
-  const fetchVotes = async () => {
+  const fetchVotes = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         page: String(votesPage),
@@ -85,7 +77,15 @@ export default function RepresentativeDetail() {
     } catch {
       // fail silently
     }
-  }
+  }, [id, votesPage, policyMap])
+
+  useEffect(() => {
+    fetchProfile()
+  }, [id])
+
+  useEffect(() => {
+    if (id) fetchVotes()
+  }, [id, fetchVotes])
 
   const getPartyClass = (p: string) => {
     const lower = p?.toLowerCase() || ''
@@ -234,6 +234,10 @@ export default function RepresentativeDetail() {
               <div className={styles.statValue}>{summary.abstainPercent.toFixed(1)}%</div>
               <div className={styles.statLabel}>Abstain ({summary.abstainCount})</div>
             </div>
+            <div className={`${styles.statCard} ${styles.statAbsent}`}>
+              <div className={styles.statValue}>{summary.absentCount}</div>
+              <div className={styles.statLabel}>Absent</div>
+            </div>
           </div>
         </section>
       )}
@@ -251,6 +255,7 @@ export default function RepresentativeDetail() {
                   <tr>
                     <th>Policy</th>
                     <th>Date</th>
+                    <th>Session</th>
                     <th>Vote</th>
                     <th>Notes</th>
                   </tr>
@@ -275,6 +280,7 @@ export default function RepresentativeDetail() {
                           )}
                         </td>
                         <td>{formatDate(vote.date)}</td>
+                        <td>{vote.session || '—'}</td>
                         <td>
                           <span className={`${styles.voteBadge} ${getVoteClass(vote.vote)}`}>
                             {vote.vote.toUpperCase()}
