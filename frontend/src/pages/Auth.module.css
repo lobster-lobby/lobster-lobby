@@ -133,6 +133,7 @@
 .toggleBtn {
   flex: 1;
   padding: var(--ll-space-sm) var(--ll-space-md);
+  min-height: 44px;
   font-size: 0.875rem;
   font-weight: 500;
   font-family: var(--ll-font);
