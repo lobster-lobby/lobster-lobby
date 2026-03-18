@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lobster Lobby API Documentation</title>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" >
+  <style>
+    html {
+      box-sizing: border-box;
+      overflow: -moz-scrollbars-vertical;
+      overflow-y: scroll;
+    }
+    *,
+    *:before,
+    *:after {
+      box-sizing: inherit;
+    }
+    body {
+      margin: 0;
+      background: #fafafa;
+    }
+    .swagger-ui .topbar {
+      background-color: #dc2626;
+    }
+    .swagger-ui .topbar .download-url-wrapper .select-label {
+      color: white;
+    }
+    .swagger-ui .topbar .download-url-wrapper input[type=text] {
+      border: 2px solid #991b1b;
+    }
+    .swagger-ui .info .title {
+      color: #dc2626;
+    }
+    .swagger-ui .btn.authorize {
+      background-color: #dc2626;
+      border-color: #dc2626;
+      color: white;
+    }
+    .swagger-ui .btn.authorize:hover {
+      background-color: #b91c1c;
+    }
+    .swagger-ui .opblock.opblock-post {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+    }
+    .swagger-ui .opblock.opblock-post .opblock-summary-method {
+      background: #10b981;
+    }
+    .swagger-ui .opblock.opblock-get {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .swagger-ui .opblock.opblock-get .opblock-summary-method {
+      background: #3b82f6;
+    }
+    .swagger-ui .opblock.opblock-delete {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+    .swagger-ui .opblock.opblock-delete .opblock-summary-method {
+      background: #ef4444;
+    }
+    .swagger-ui .opblock.opblock-patch {
+      border-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.1);
+    }
+    .swagger-ui .opblock.opblock-patch .opblock-summary-method {
+      background: #f59e0b;
+    }
+    .swagger-ui .opblock.opblock-put {
+      border-color: #8b5cf6;
+      background: rgba(139, 92, 246, 0.1);
+    }
+    .swagger-ui .opblock.opblock-put .opblock-summary-method {
+      background: #8b5cf6;
+    }
+    /* Header styling */
+    .header-wrapper {
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      padding: 20px 40px;
+      color: white;
+    }
+    .header-wrapper h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .header-wrapper p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    .header-wrapper a {
+      color: #fecaca;
+      text-decoration: none;
+    }
+    .header-wrapper a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-wrapper">
+    <h1>Lobster Lobby API</h1>
+    <p>Interactive API documentation &middot; <a href="/">Back to App</a> &middot; <a href="openapi.yaml" download>Download OpenAPI Spec</a></p>
+  </div>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js" charset="UTF-8"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js" charset="UTF-8"></script>
+  <script>
+    window.onload = function() {
+      window.ui = SwaggerUIBundle({
+        url: "openapi.yaml",
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout",
+        persistAuthorization: true,
+        defaultModelsExpandDepth: 1,
+        defaultModelExpandDepth: 2,
+        docExpansion: "list",
+        filter: true,
+        showExtensions: true,
+        showCommonExtensions: true,
+        tryItOutEnabled: true
+      });
+    };
+  </script>
+</body>
+</html>

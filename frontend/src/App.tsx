@@ -23,6 +23,7 @@ import UserProfile from './pages/UserProfile'
 import Debates from './pages/Debates'
 import DebateDetail from './pages/DebateDetail'
 import AdminModeration from './pages/AdminModeration'
+import ApiDocs from './pages/ApiDocs'
 import NotFound from './pages/NotFound'
 import './styles/global.css'
 
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="/debates/:slug" element={<DebateDetail />} />
             <Route path="/campaigns" element={<Campaigns />} />
             <Route path="/campaigns/:slug" element={<CampaignDetail />} />
+            <Route path="/api-docs" element={<ApiDocs />} />
             <Route
               path="/dashboard"
               element={
