@@ -44,7 +44,8 @@
 }
 
 .topSubmenuBtn {
-  padding: 2px var(--ll-space-sm);
+  padding: var(--ll-space-xs) var(--ll-space-sm);
+  min-height: 44px;
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--ll-text-secondary);
@@ -183,6 +184,7 @@
 .stateSelect {
   width: 100%;
   padding: var(--ll-space-sm) var(--ll-space-md);
+  min-height: 44px;
   font-size: 0.875rem;
   border: 1px solid var(--ll-border);
   border-radius: var(--ll-radius-md);

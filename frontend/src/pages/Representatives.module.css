@@ -42,6 +42,7 @@
   color: var(--ll-text, #1a1a1a);
   font-size: 0.9rem;
   min-width: 140px;
+  min-height: 44px;
 }
 
 /* Search form */
