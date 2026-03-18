@@ -80,6 +80,7 @@
   font-size: 0.875rem;
   color: var(--ll-text);
   cursor: pointer;
+  min-height: 44px;
 }
 
 .checkboxLabel input[type="checkbox"] {
