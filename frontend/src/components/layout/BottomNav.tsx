@@ -39,7 +39,7 @@ const navItems = [
   { to: '/', label: 'Home', icon: HomeIcon },
   { to: '/feed', label: 'Search', icon: SearchIcon },
   { to: '/policies/new', label: 'Create', icon: CreateIcon },
-  { to: '/bookmarks', label: 'Bookmarks', icon: BookmarkIcon },
+  { to: '/representatives', label: 'Reps', icon: BookmarkIcon },
   { to: '/dashboard', label: 'Profile', icon: ProfileIcon },
 ]
 
