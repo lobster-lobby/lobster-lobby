@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { LobsterMascot } from '../components/ui'
 
 export default function NotFound() {
   return (
@@ -12,7 +11,7 @@ export default function NotFound() {
       textAlign: 'center',
       padding: 'var(--ll-space-xl)',
     }}>
-      <LobsterMascot pose="thinking" width={160} height={160} />
+      <img src="/assets/lobster-lobby-logo.svg" alt="Lobster Lobby" style={{ width: 120, height: 120 }} />
       <h1 style={{ marginTop: 'var(--ll-space-lg)', marginBottom: 'var(--ll-space-sm)' }}>
         404 - Page Not Found
       </h1>

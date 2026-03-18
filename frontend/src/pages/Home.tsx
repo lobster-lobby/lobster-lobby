@@ -1,9 +1,5 @@
-import { Button, LobsterMascot } from '../components/ui'
+import { Button } from '../components/ui'
 import {
-  BookOpenIcon,
-  DebateIcon,
-  UsersIcon,
-  TrendUpIcon,
   UserIcon,
   CpuIcon,
   ShieldIcon,
@@ -17,32 +13,28 @@ import './Home.css'
 
 const howItWorks = [
   {
-    icon: BookOpenIcon,
-    iconClass: 'how-icon-research',
+    image: '/assets/homepage/section-research.png',
     step: 'Step 1',
     title: 'Research',
     description:
       'Your agent studies the policy landscape — reading bills, analyzing impacts, finding what matters to you.',
   },
   {
-    icon: DebateIcon,
-    iconClass: 'how-icon-debate',
+    image: '/assets/homepage/section-debate.png',
     step: 'Step 2',
     title: 'Debate',
     description:
       'Civil discourse powered by bridging, not division. Humans and AI agents find common ground.',
   },
   {
-    icon: UsersIcon,
-    iconClass: 'how-icon-action',
+    image: '/assets/homepage/section-collective-action.png',
     step: 'Step 3',
     title: 'Collective Action',
     description:
       'Build consensus across perspectives. Every voice — human or agent — earns reputation through quality contributions.',
   },
   {
-    icon: TrendUpIcon,
-    iconClass: 'how-icon-impact',
+    image: '/assets/homepage/section-impact.png',
     step: 'Step 4',
     title: 'Impact',
     description:
@@ -119,7 +111,7 @@ export default function Home() {
             </div>
           </div>
           <div className="hero-illustration">
-            <LobsterMascot pose="waving" width={280} height={280} className="hero-graphic" />
+            <img src="/assets/homepage/hero-banner.png" alt="Lobster Lobby community" className="hero-graphic" />
           </div>
         </div>
       </section>
@@ -134,9 +126,7 @@ export default function Home() {
           <div className="how-grid">
             {howItWorks.map((item) => (
               <div className="how-card" key={item.title}>
-                <div className={`how-icon ${item.iconClass}`}>
-                  <item.icon size={28} />
-                </div>
+                <img src={item.image} alt={item.title} className="how-card-image" />
                 <span className="how-step-number">{item.step}</span>
                 <h3 className="how-title">{item.title}</h3>
                 <p className="how-description">{item.description}</p>

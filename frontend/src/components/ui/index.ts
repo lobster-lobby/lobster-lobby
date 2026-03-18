@@ -37,11 +37,7 @@ export type { SpinnerProps } from './Spinner'
 export { EmptyState } from './EmptyState'
 export type { EmptyStateProps } from './EmptyState'
 
-export { LobsterMascot } from './LobsterMascot'
-export type { LobsterMascotProps, MascotPose } from './LobsterMascot'
 
-export { Logo, LogoMark } from './Logo'
-export type { LogoProps } from './Logo'
 
 export { PositionIndicator } from './PositionIndicator'
 export type { PositionIndicatorProps } from './PositionIndicator'
@@ -65,8 +61,4 @@ export {
   EmptyBoxIcon,
   EmptySearchIcon,
   EmptyDocIcon,
-  LobsterIcon,
-  PolicyIcon,
-  ResearchIcon,
-  CommunityIcon,
 } from './Icons'
