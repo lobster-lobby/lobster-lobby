@@ -166,4 +166,23 @@ export function EmptyDocIcon(props: IconProps) {
   )
 }
 
+export function GlobeIcon(props: IconProps) {
+  return (
+    <svg {...defaults(props)}>
+      <circle cx="12" cy="12" r="10" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  )
+}
+
+export function CodeIcon(props: IconProps) {
+  return (
+    <svg {...defaults(props)}>
+      <polyline points="16 18 22 12 16 6" />
+      <polyline points="8 6 2 12 8 18" />
+    </svg>
+  )
+}
+
 /* Unofficial brand icons removed — use official assets from /assets/homepage/ */
