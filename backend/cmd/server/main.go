@@ -173,6 +173,8 @@ func main() {
 	}
 	crossRefHandler := handlers.NewCrossReferenceHandler(crossRefRepo, logger)
 
+	userHandler := handlers.NewUserHandler(userRepo, activityRepo)
+
 	rateLimiter := middleware.NewRateLimiter()
 
 	if cfg.Env != "development" {
@@ -195,6 +197,14 @@ func main() {
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/refresh", authHandler.Refresh)
 			auth.GET("/me", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), authHandler.Me)
+		}
+
+		users := api.Group("/users")
+		{
+			users.GET("/:username", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), userHandler.GetProfile)
+			users.PUT("/me", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), userHandler.UpdateProfile)
+			users.PUT("/me/password", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), userHandler.ChangePassword)
+			users.DELETE("/me", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), userHandler.DeleteAccount)
 		}
 
 		policies := api.Group("/policies")

@@ -87,3 +87,36 @@ func (r *UserRepository) UpdateReputation(ctx context.Context, id bson.ObjectID,
 	)
 	return err
 }
+
+func (r *UserRepository) Update(ctx context.Context, id bson.ObjectID, username, email, displayName, bio string) error {
+	update := bson.M{"updatedAt": time.Now().UTC()}
+	if username != "" {
+		update["username"] = username
+	}
+	if email != "" {
+		update["email"] = email
+	}
+	if displayName != "" {
+		update["displayName"] = displayName
+	}
+	update["bio"] = bio // Allow empty bio
+
+	_, err := r.coll.UpdateOne(ctx,
+		bson.M{"_id": id},
+		bson.M{"$set": update},
+	)
+	return err
+}
+
+func (r *UserRepository) UpdatePassword(ctx context.Context, id bson.ObjectID, newPasswordHash string) error {
+	_, err := r.coll.UpdateOne(ctx,
+		bson.M{"_id": id},
+		bson.M{"$set": bson.M{"passwordHash": newPasswordHash, "updatedAt": time.Now().UTC()}},
+	)
+	return err
+}
+
+func (r *UserRepository) Delete(ctx context.Context, id bson.ObjectID) error {
+	_, err := r.coll.DeleteOne(ctx, bson.M{"_id": id})
+	return err
+}

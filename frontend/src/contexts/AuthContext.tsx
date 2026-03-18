@@ -24,6 +24,7 @@ interface AuthContextValue {
   login: (credentials: LoginCredentials) => Promise<void>
   register: (data: RegisterData) => Promise<void>
   logout: () => void
+  refreshUser: () => Promise<void>
 }
 
 interface LoginCredentials {
@@ -253,8 +254,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     navigateRef.current?.('/')
   }, [clearAuth])
 
+  const refreshUser = useCallback(async () => {
+    const token = getAccessToken()
+    if (!token) return
+
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.user) {
+          setUser({
+            id: data.user.id,
+            username: data.user.username,
+            email: data.user.email,
+            role: data.user.role,
+          })
+        }
+      }
+    } catch {
+      // Non-critical
+    }
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

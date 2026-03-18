@@ -28,9 +28,23 @@
   margin-bottom: var(--ll-space-sm);
 }
 
+.sectionTitleDanger {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ll-error);
+  margin-bottom: var(--ll-space-sm);
+}
+
 .card {
   background: var(--ll-bg-card);
   border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-md);
+  padding: var(--ll-space-md);
+}
+
+.cardDanger {
+  background: var(--ll-bg-card);
+  border: 1px solid var(--ll-error);
   border-radius: var(--ll-radius-md);
   padding: var(--ll-space-md);
 }
@@ -42,10 +56,18 @@
   gap: var(--ll-space-md);
 }
 
+@media (max-width: 480px) {
+  .settingRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 .settingInfo {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
 }
 
 .settingLabel {
@@ -89,4 +111,89 @@
   background: var(--ll-bg-card);
   color: var(--ll-text);
   box-shadow: var(--ll-shadow-sm);
+}
+
+/* Form styles */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-md);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--ll-space-sm);
+}
+
+/* Toggle switch */
+.toggle {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  background: var(--ll-bg-elevated);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-full);
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+  flex-shrink: 0;
+}
+
+.toggle:hover {
+  border-color: var(--ll-text-muted);
+}
+
+.toggleActive {
+  background: var(--ll-primary);
+  border-color: var(--ll-primary);
+}
+
+.toggleKnob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: var(--ll-bg-card);
+  border-radius: 50%;
+  box-shadow: var(--ll-shadow-sm);
+  transition: transform 150ms ease;
+}
+
+.toggleActive .toggleKnob {
+  transform: translateX(20px);
+}
+
+.divider {
+  height: 1px;
+  background: var(--ll-border);
+  margin: var(--ll-space-md) 0;
+}
+
+/* Toast container */
+.toastContainer {
+  position: fixed;
+  top: var(--ll-space-lg);
+  right: var(--ll-space-lg);
+  z-index: 1000;
+}
+
+/* Modal styles */
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-md);
+}
+
+.modalText {
+  font-size: 0.875rem;
+  color: var(--ll-text-secondary);
+  line-height: 1.5;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ll-space-sm);
+  padding-top: var(--ll-space-sm);
 }
