@@ -236,6 +236,9 @@ func main() {
 			policies.GET("/:id/research/:researchId", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), researchHandler.GetByID)
 			policies.PATCH("/:id/research/:researchId", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), researchHandler.Update)
 			policies.POST("/:id/research/:researchId/vote", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), researchHandler.Vote)
+
+			// Voting records for a policy
+			policies.GET("/:id/votes", repHandler.ListVotesByPolicy)
 		}
 
 		campaigns := api.Group("/campaigns")

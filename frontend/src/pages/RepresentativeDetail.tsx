@@ -4,6 +4,13 @@ import type { Representative, VotingSummary, VotingRecord } from '../types/repre
 import { Pagination } from '../components/ui'
 import styles from './RepresentativeDetail.module.css'
 
+interface PolicyInfo {
+  id: string
+  title: string
+  slug: string
+  type: 'existing_law' | 'active_bill' | 'proposed'
+}
+
 export default function RepresentativeDetail() {
   const { id } = useParams<{ id: string }>()
   const [rep, setRep] = useState<Representative | null>(null)
@@ -14,6 +21,7 @@ export default function RepresentativeDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState(false)
+  const [policyMap, setPolicyMap] = useState<Record<string, PolicyInfo>>({})
 
   const perPage = 20
 
@@ -53,8 +61,27 @@ export default function RepresentativeDetail() {
       const res = await fetch(`/api/representatives/${id}/votes?${params}`)
       if (!res.ok) return
       const data = await res.json()
-      setVotes(data.votes || [])
+      const votesList: VotingRecord[] = data.votes || []
+      setVotes(votesList)
       setVotesTotal(data.total || 0)
+
+      // Fetch policy info for each unique policyId not already cached
+      const uniqueIds = [...new Set(votesList.map(v => v.policyId))].filter(pid => !policyMap[pid])
+      if (uniqueIds.length > 0) {
+        const results = await Promise.allSettled(
+          uniqueIds.map(pid =>
+            fetch(`/api/policies/${pid}`).then(r => r.ok ? r.json() : null)
+          )
+        )
+        const newMap: Record<string, PolicyInfo> = { ...policyMap }
+        results.forEach((result, i) => {
+          if (result.status === 'fulfilled' && result.value?.policy) {
+            const p = result.value.policy
+            newMap[uniqueIds[i]] = { id: p.id, title: p.title, slug: p.slug, type: p.type }
+          }
+        })
+        setPolicyMap(newMap)
+      }
     } catch {
       // fail silently
     }
@@ -222,25 +249,41 @@ export default function RepresentativeDetail() {
               <table className={styles.table}>
                 <thead>
                   <tr>
+                    <th>Policy</th>
                     <th>Date</th>
-                    <th>Session</th>
                     <th>Vote</th>
                     <th>Notes</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {votes.map((vote) => (
-                    <tr key={vote.id}>
-                      <td>{formatDate(vote.date)}</td>
-                      <td>{vote.session}</td>
-                      <td>
-                        <span className={`${styles.voteBadge} ${getVoteClass(vote.vote)}`}>
-                          {vote.vote.toUpperCase()}
-                        </span>
-                      </td>
-                      <td>{vote.notes || '—'}</td>
-                    </tr>
-                  ))}
+                  {votes.map((vote) => {
+                    const policy = policyMap[vote.policyId]
+                    return (
+                      <tr key={vote.id}>
+                        <td>
+                          {policy ? (
+                            <div>
+                              <Link to={`/policies/${policy.slug}`} className={styles.policyLink}>
+                                {policy.title}
+                              </Link>
+                              <span className={`${styles.typeBadge} ${styles[`type_${policy.type}`] || ''}`}>
+                                {policy.type === 'existing_law' ? 'Law' : policy.type === 'active_bill' ? 'Bill' : 'Proposed'}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className={styles.policyIdFallback}>{vote.policyId}</span>
+                          )}
+                        </td>
+                        <td>{formatDate(vote.date)}</td>
+                        <td>
+                          <span className={`${styles.voteBadge} ${getVoteClass(vote.vote)}`}>
+                            {vote.vote.toUpperCase()}
+                          </span>
+                        </td>
+                        <td>{vote.notes || '—'}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
