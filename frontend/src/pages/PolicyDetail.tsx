@@ -17,6 +17,7 @@ const TABS = [
   { id: 'debate', label: 'Debate' },
   { id: 'research', label: 'Research' },
   { id: 'representatives', label: 'Representatives' },
+  { id: 'campaigns', label: 'Campaigns' },
   { id: 'polls', label: 'Polls' },
   { id: 'draft', label: 'Draft' },
 ]
@@ -26,6 +27,7 @@ const DebateTab = lazy(() => import('../components/tabs/DebateTab'))
 const ResearchTab = lazy(() => import('../components/tabs/ResearchTab'))
 const RepresentativesTab = lazy(() => import('../components/tabs/RepresentativesTab'))
 const PollsTab = lazy(() => import('../components/tabs/PollsTab'))
+const CampaignsTab = lazy(() => import('../components/tabs/CampaignsTab'))
 const DraftTab = lazy(() => import('../components/tabs/DraftTab'))
 
 function formatDate(dateStr: string): string {
@@ -273,6 +275,21 @@ export default function PolicyDetail() {
             <RepresentativesTab policyId={policy?.id || ''} />
           </Suspense>
         )
+      case 'campaigns': {
+        const totalVotes =
+          (policy?.engagement.debateCount ?? 0) +
+          (policy?.engagement.researchCount ?? 0) +
+          (policy?.engagement.pollCount ?? 0)
+        return (
+          <Suspense fallback={<Spinner size="lg" />}>
+            <CampaignsTab
+              policyId={policy?.id || ''}
+              policyTitle={policy?.title}
+              totalVotes={totalVotes}
+            />
+          </Suspense>
+        )
+      }
       case 'polls':
         return (
           <Suspense fallback={<Spinner size="lg" />}>
@@ -338,6 +355,10 @@ export default function PolicyDetail() {
               <span className={styles.billNumber}>{policy.billNumber}</span>
             )}
             {policy.status === 'ready_for_campaign' && (
+              <Badge variant="success">Ready for Campaign</Badge>
+            )}
+            {policy.status !== 'ready_for_campaign' &&
+              policy.engagement.debateCount + policy.engagement.researchCount + policy.engagement.pollCount > 10 && (
               <Badge variant="success">Ready for Campaign</Badge>
             )}
           </div>
