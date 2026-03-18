@@ -1,32 +1,20 @@
 import { Link } from 'react-router-dom'
+import styles from './NotFound.module.css'
 
 export default function NotFound() {
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '60vh',
-      textAlign: 'center',
-      padding: 'var(--ll-space-xl)',
-    }}>
-      <img src="/assets/lobster-lobby-logo.svg" alt="Lobster Lobby" style={{ width: 120, height: 120 }} />
-      <h1 style={{ marginTop: 'var(--ll-space-lg)', marginBottom: 'var(--ll-space-sm)' }}>
-        404 - Page Not Found
-      </h1>
-      <p style={{ color: 'var(--ll-text-secondary)', marginBottom: 'var(--ll-space-lg)' }}>
-        The page you're looking for doesn't exist.
+    <div className={styles.page}>
+      <div className={styles.mascot} role="img" aria-label="Lobster">
+        🦞
+      </div>
+      <div className={styles.code}>404</div>
+      <h1 className={styles.title}>This page got away...</h1>
+      <p className={styles.description}>
+        Looks like this page scuttled off into the deep. It may have been moved,
+        removed, or never existed in the first place.
       </p>
-      <Link
-        to="/"
-        style={{
-          color: 'var(--ll-primary)',
-          textDecoration: 'none',
-          fontWeight: 500,
-        }}
-      >
-        Go home
+      <Link to="/" className={styles.homeLink}>
+        Go Home
       </Link>
     </div>
   )

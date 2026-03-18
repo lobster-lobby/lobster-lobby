@@ -19,6 +19,12 @@
   margin-bottom: var(--ll-space-lg);
 }
 
+.emoji {
+  font-size: 3.5rem;
+  line-height: 1;
+  margin-bottom: var(--ll-space-lg);
+}
+
 .heading {
   font-size: 1.25rem;
   font-weight: 600;
@@ -31,8 +37,42 @@
   color: var(--ll-text-secondary);
   margin: 0 0 var(--ll-space-lg);
   max-width: 400px;
+  line-height: 1.5;
 }
 
 .action {
   margin-top: var(--ll-space-md);
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ll-space-sm) var(--ll-space-xl);
+  background: var(--ll-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--ll-radius-full);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.actionBtn:hover {
+  background: var(--ll-primary-hover);
+  transform: translateY(-1px);
+}
+
+.actionBtn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 640px) {
+  .wrapper {
+    padding: var(--ll-space-xl) var(--ll-space-md);
+  }
+
+  .emoji {
+    font-size: 3rem;
+  }
 }
