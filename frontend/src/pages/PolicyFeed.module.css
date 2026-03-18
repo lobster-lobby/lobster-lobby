@@ -323,6 +323,7 @@
     background: var(--ll-bg-card);
     border-radius: var(--ll-radius-lg) var(--ll-radius-lg) 0 0;
     padding: var(--ll-space-lg);
+    padding-bottom: calc(56px + env(safe-area-inset-bottom) + var(--ll-space-lg));
     z-index: 101;
     animation: slideUp 250ms ease;
   }

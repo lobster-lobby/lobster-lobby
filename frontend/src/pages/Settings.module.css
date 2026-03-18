@@ -68,6 +68,7 @@
 }
 
 .themeOption {
+  min-height: 44px;
   padding: var(--ll-space-xs) var(--ll-space-sm);
   font-size: 0.8125rem;
   font-weight: 500;
