@@ -1,0 +1,236 @@
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--ll-space-xl) var(--ll-space-md);
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 300px;
+  padding: var(--ll-space-xl);
+}
+
+.errorTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ll-text);
+  margin-bottom: var(--ll-space-sm);
+}
+
+.errorText {
+  font-size: 0.875rem;
+  color: var(--ll-text-secondary);
+  margin-bottom: var(--ll-space-lg);
+}
+
+/* Profile Header */
+.header {
+  display: flex;
+  gap: var(--ll-space-lg);
+  align-items: flex-start;
+  margin-bottom: var(--ll-space-xl);
+}
+
+@media (max-width: 480px) {
+  .header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+.avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatarText {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--ll-primary);
+}
+
+.headerInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.displayName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ll-text);
+  margin-bottom: 2px;
+  word-break: break-word;
+}
+
+.username {
+  font-size: 0.875rem;
+  color: var(--ll-text-muted);
+  margin-bottom: var(--ll-space-sm);
+}
+
+.bio {
+  font-size: 0.9375rem;
+  color: var(--ll-text-secondary);
+  line-height: 1.5;
+  margin-bottom: var(--ll-space-sm);
+}
+
+.memberSince {
+  font-size: 0.8125rem;
+  color: var(--ll-text-muted);
+}
+
+.editButton {
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .editButton {
+    width: 100%;
+  }
+
+  .editButton button {
+    width: 100%;
+  }
+}
+
+/* Stats Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--ll-space-sm);
+  margin-bottom: var(--ll-space-xl);
+}
+
+@media (max-width: 480px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--ll-space-md);
+  background: var(--ll-bg-card);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-md);
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ll-text);
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--ll-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Sections */
+.section {
+  margin-bottom: var(--ll-space-xl);
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ll-text);
+  margin-bottom: var(--ll-space-sm);
+}
+
+/* Reputation Card */
+.reputationCard {
+  display: flex;
+  gap: var(--ll-space-lg);
+  padding: var(--ll-space-lg);
+  background: var(--ll-bg-card);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-md);
+}
+
+@media (max-width: 480px) {
+  .reputationCard {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+.reputationScore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ll-space-md) var(--ll-space-lg);
+  background: var(--ll-bg-elevated);
+  border-radius: var(--ll-radius-md);
+  min-width: 100px;
+}
+
+.scoreValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--ll-primary);
+}
+
+.scoreLabel {
+  font-size: 0.75rem;
+  color: var(--ll-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.reputationDetails {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-sm);
+  flex: 1;
+  justify-content: center;
+}
+
+.reputationItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--ll-space-xs) 0;
+}
+
+@media (max-width: 480px) {
+  .reputationItem {
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+.reputationLabel {
+  font-size: 0.875rem;
+  color: var(--ll-text-muted);
+}
+
+.reputationValue {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ll-text);
+}

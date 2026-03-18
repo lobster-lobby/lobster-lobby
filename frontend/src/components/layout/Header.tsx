@@ -58,6 +58,13 @@ export function Header() {
                   </div>
                   <div className={styles.dropdownDivider} />
                   <Link
+                    to={`/u/${user?.username}`}
+                    className={styles.dropdownItem}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    My Profile
+                  </Link>
+                  <Link
                     to="/dashboard"
                     className={styles.dropdownItem}
                     onClick={() => setMenuOpen(false)}
