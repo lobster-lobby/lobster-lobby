@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"math"
+	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -26,6 +27,7 @@ type CampaignListOpts struct {
 	Sort     string // "trending", "newest", "participants", "shares"
 	Status   string
 	PolicyID string
+	Search   string
 }
 
 func (r *CampaignRepository) EnsureIndexes(ctx context.Context) error {
@@ -152,6 +154,14 @@ func (r *CampaignRepository) List(ctx context.Context, opts CampaignListOpts) ([
 	if opts.PolicyID != "" {
 		if oid, err := bson.ObjectIDFromHex(opts.PolicyID); err == nil {
 			filter["policyId"] = oid
+		}
+	}
+	if opts.Search != "" {
+		escaped := regexp.QuoteMeta(opts.Search)
+		filter["$or"] = []bson.M{
+			{"title": bson.M{"$regex": escaped, "$options": "i"}},
+			{"objective": bson.M{"$regex": escaped, "$options": "i"}},
+			{"description": bson.M{"$regex": escaped, "$options": "i"}},
 		}
 	}
 
