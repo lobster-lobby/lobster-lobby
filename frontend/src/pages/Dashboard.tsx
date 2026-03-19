@@ -1,6 +1,6 @@
 import { useAuth } from '../hooks/useAuth'
 import { Link, useNavigate } from 'react-router-dom'
-import './Dashboard.css'
+import styles from './Dashboard.module.css'
 
 const sections = [
   {
@@ -39,29 +39,29 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="dashboard">
-      <div className="dashboard-header">
+    <div className={styles.dashboard}>
+      <div className={styles['dashboard-header']}>
         <div>
-          <h1 className="dashboard-title">Dashboard</h1>
-          <p className="dashboard-subtitle">Welcome back{user?.username ? `, ${user.username}` : ''}!</p>
+          <h1 className={styles['dashboard-title']}>Dashboard</h1>
+          <p className={styles['dashboard-subtitle']}>Welcome back{user?.username ? `, ${user.username}` : ''}!</p>
         </div>
-        <div className="dashboard-header-actions">
-          <Link to="/settings" className="dashboard-settings-link">
+        <div className={styles['dashboard-header-actions']}>
+          <Link to="/settings" className={styles['dashboard-settings-link']}>
             ⚙️ Settings
           </Link>
-          <button className="dashboard-logout-btn" onClick={handleLogout}>
+          <button className={styles['dashboard-logout-btn']} onClick={handleLogout}>
             Sign Out
           </button>
         </div>
       </div>
 
-      <div className="dashboard-grid">
+      <div className={styles['dashboard-grid']}>
         {sections.map((s) => (
-          <Link to={s.link} key={s.title} className="dashboard-card">
-            <span className="dashboard-card-icon">{s.icon}</span>
+          <Link to={s.link} key={s.title} className={styles['dashboard-card']}>
+            <span className={styles['dashboard-card-icon']}>{s.icon}</span>
             <div>
-              <h2 className="dashboard-card-title">{s.title}</h2>
-              <p className="dashboard-card-desc">{s.description}</p>
+              <h2 className={styles['dashboard-card-title']}>{s.title}</h2>
+              <p className={styles['dashboard-card-desc']}>{s.description}</p>
             </div>
           </Link>
         ))}
