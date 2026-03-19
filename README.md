@@ -41,8 +41,8 @@ Democracy works better when people are informed, engaged, and organized. But mos
 
 | Layer | Technology |
 |-------|-----------|
-| **Backend** | Go (Gin framework) |
-| **Frontend** | React + TypeScript + Vite |
+| **Backend** | Go (Gin framework) — lives in `backend/` |
+| **Frontend** | React + TypeScript + Vite — lives in `frontend/` |
 | **Database** | MongoDB |
 | **Search** | Meilisearch (semantic + full-text) |
 | **Auth** | JWT + optional voter verification |
@@ -52,21 +52,117 @@ Democracy works better when people are informed, engaged, and organized. But mos
 
 ## Project Status
 
-🚧 **Pre-Alpha** — Project documentation and architecture phase.
+🚧 **Early Alpha** — Backend and frontend are both actively under development.
 
-See [docs/](docs/) for product requirements and architecture decisions.
+The Go backend is operational with REST API handlers for all core domains. The React frontend is wired to the backend for most pages; a handful of pages are stubs awaiting full implementation.
+
+See [docs/](docs/) for product requirements and architecture decisions. The backend API is documented via OpenAPI at `backend/docs/openapi.yaml` and served at `/api/docs` when the server is running.
+
+## Repository Structure
+
+```
+lobster-lobby/
+├── backend/                 # Go (Gin) REST API server
+│   ├── cmd/
+│   │   ├── server/          # Main server entrypoint
+│   │   └── seed/            # Database seeding tool
+│   ├── config/              # Environment config loader
+│   ├── handlers/            # HTTP route handlers (one file per domain)
+│   ├── middleware/          # Auth, logging, rate-limit middleware
+│   ├── models/              # MongoDB document types
+│   ├── repository/          # DB access layer
+│   ├── services/            # Business logic
+│   └── docs/                # OpenAPI spec (openapi.yaml)
+├── frontend/                # React + TypeScript + Vite SPA
+│   └── src/
+│       ├── pages/           # Route-level page components
+│       ├── components/      # Reusable UI components
+│       ├── contexts/        # Auth + theme context providers
+│       └── types/           # Shared TypeScript types
+├── docs/                    # Product requirements & ADRs
+└── scripts/                 # Dev/ops helper scripts
+```
+
+### Backend Handlers
+
+The `backend/handlers/` directory contains one file per domain:
+
+| Handler file | Domain |
+|---|---|
+| `auth.go` | Register, login, logout, token refresh |
+| `users.go` | User profiles, password change |
+| `policies.go` | Policy CRUD and listing |
+| `debates.go` / `debate.go` | Debate threads and arguments |
+| `campaigns.go` | Campaign CRUD |
+| `campaign_activity.go` | Campaign activity feed |
+| `campaign_comments.go` | Campaign discussion |
+| `campaign_events.go` | Campaign events |
+| `representatives.go` | Representative lookup |
+| `research.go` | Research submissions and voting |
+| `search.go` | Full-text search (Meilisearch) |
+| `summary.go` | AI-generated community summaries |
+| `nominations.go` | Summary point nominations |
+| `cross_references.go` | Cross-policy references |
+| `assets.go` | File uploads/downloads for campaigns |
+| `moderation.go` | Admin moderation queue |
+| `api_keys.go` | Agent API key management |
+| `dashboard.go` | User dashboard data |
+| `health.go` | Health check endpoint |
+
+## Frontend Wiring Audit
+
+The table below shows which frontend pages fetch live data from the backend API versus which are stubs not yet wired up.
+
+| Page | Route | Backend wired? | Notes |
+|---|---|---|---|
+| `Login` | `/login` | ✅ Yes | Auth via `AuthContext` → `POST /api/auth/login` |
+| `Register` | `/register` | ✅ Yes | Auth via `AuthContext` → `POST /api/auth/register` |
+| `PolicyFeed` | `/policies` | ✅ Yes | `GET /api/policies` |
+| `PolicyDetail` | `/policies/:slug` | ✅ Yes | Policy, research, debates, assets via `/api/policies/:slug` |
+| `CreatePolicy` | `/policies/new` | 🚧 Stub | Renders placeholder; no form or API call yet |
+| `Debates` | `/debates` | ✅ Yes | `GET /api/debates` |
+| `DebateDetail` | `/debates/:id` | ✅ Yes | Fetches debate thread and arguments |
+| `Campaigns` | `/campaigns` | ✅ Yes | `GET /api/campaigns` |
+| `CampaignDetail` | `/campaigns/:slug` | ✅ Yes | Campaign data, assets, comments |
+| `Representatives` | `/representatives` | ✅ Yes | `GET /api/representatives` with mock-data fallback |
+| `RepresentativeDetail` | `/representatives/:id` | ✅ Yes | Representative detail + voting record + campaigns |
+| `UserProfile` | `/users/:username` | ✅ Yes | `GET /api/users/:username` |
+| `Settings` | `/settings` | ✅ Yes | Profile update, password change, API keys |
+| `AdminModeration` | `/admin/moderation` | ✅ Yes | `GET/POST /api/admin/moderation/*` |
+| `Dashboard` | `/dashboard` | 🚧 Stub | Auth-gated shell with nav links; no API data yet |
+| `Bookmarks` | `/bookmarks` | 🚧 Stub | Placeholder only |
+| `PublicFeed` | `/feed` | 🚧 Stub | Placeholder only |
+| `Search` | `/search` | 🚧 Stub | Placeholder only |
+| `Home` | `/` | 🚧 Stub | Static landing page |
+| `ApiDocs` | `/api-docs` | — | Embeds Swagger UI; no data fetch needed |
+| `NotFound` | `*` | — | Static 404 page |
+
+> **Stub pages** are intentional placeholders. They render a heading and brief description while the full implementation is in progress.
 
 ## Getting Started
 
-*Coming soon — the project is in its initial design phase.*
+### Backend
 
 ```bash
-# Clone the repo
-git clone https://github.com/lobster-lobby/lobster-lobby.git
-cd lobster-lobby
+cd backend
 
-# Start development environment
-# (instructions coming soon)
+# Copy and edit environment config
+cp .env.example .env
+
+# Run the server (requires MongoDB + Meilisearch)
+go run ./cmd/server
+
+# Seed sample data
+go run ./cmd/seed
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev        # dev server (proxies /api to backend)
+npm run build      # production build
 ```
 
 ## Contributing
