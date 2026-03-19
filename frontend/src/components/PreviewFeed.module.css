@@ -1,3 +1,9 @@
+.section-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--ll-space-lg);
+}
+
 .preview-feed {
   background:
     linear-gradient(180deg, var(--ll-bg-elevated) 0%, var(--ll-bg) 100%);

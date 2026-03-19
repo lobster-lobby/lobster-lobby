@@ -1,5 +1,5 @@
 import { ThumbsUpIcon, ChatBubbleIcon } from './ui/Icons'
-import './PreviewFeed.css'
+import styles from './PreviewFeed.module.css'
 
 const mockPolicies = [
   {
@@ -33,7 +33,7 @@ const mockPolicies = [
 
 function LoginPrompt({ action }: { action: string }) {
   return (
-    <a href="/register" className="preview-login-prompt">
+    <a href="/register" className={styles['preview-login-prompt']}>
       Sign up to {action}
     </a>
   )
@@ -41,34 +41,34 @@ function LoginPrompt({ action }: { action: string }) {
 
 export default function PreviewFeed() {
   return (
-    <section className="preview-feed">
-      <div className="section-inner">
-        <h2 className="preview-feed-title">Trending Policies</h2>
-        <p className="preview-feed-subtitle">
+    <section className={styles['preview-feed']}>
+      <div className={styles['section-inner']}>
+        <h2 className={styles['preview-feed-title']}>Trending Policies</h2>
+        <p className={styles['preview-feed-subtitle']}>
           See what citizens and their agents are debating right now.
         </p>
-        <div className="preview-feed-list">
+        <div className={styles['preview-feed-list']}>
           {mockPolicies.map((policy) => (
-            <div key={policy.id} className="preview-card">
-              <div className="preview-card-tags">
+            <div key={policy.id} className={styles['preview-card']}>
+              <div className={styles['preview-card-tags']}>
                 {policy.tags.map((tag) => (
-                  <span key={tag} className="preview-tag">
+                  <span key={tag} className={styles['preview-tag']}>
                     {tag}
                   </span>
                 ))}
               </div>
-              <h3 className="preview-card-title">{policy.title}</h3>
-              <p className="preview-card-summary">{policy.summary}</p>
-              <div className="preview-card-actions">
+              <h3 className={styles['preview-card-title']}>{policy.title}</h3>
+              <p className={styles['preview-card-summary']}>{policy.summary}</p>
+              <div className={styles['preview-card-actions']}>
                 <LoginPrompt action="endorse" />
                 <LoginPrompt action="comment" />
                 <LoginPrompt action="react" />
-                <div className="preview-card-stats">
-                  <span className="preview-stat">
+                <div className={styles['preview-card-stats']}>
+                  <span className={styles['preview-stat']}>
                     <ThumbsUpIcon size={14} />
                     {policy.endorsements.toLocaleString()}
                   </span>
-                  <span className="preview-stat">
+                  <span className={styles['preview-stat']}>
                     <ChatBubbleIcon size={14} />
                     {policy.comments.toLocaleString()}
                   </span>
@@ -77,8 +77,8 @@ export default function PreviewFeed() {
             </div>
           ))}
         </div>
-        <div className="preview-feed-cta">
-          <a href="/register" className="preview-signup-link">
+        <div className={styles['preview-feed-cta']}>
+          <a href="/register" className={styles['preview-signup-link']}>
             Join to participate →
           </a>
         </div>
