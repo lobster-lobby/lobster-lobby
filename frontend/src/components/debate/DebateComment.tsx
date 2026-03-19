@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm'
 import { useAuth, getAccessToken } from '../../hooks/useAuth'
 import { UserBadge, VoteButtons } from '../ui'
 import CommentComposer from './CommentComposer'
-import type { Comment } from '../../types/debate'
+import type { Comment } from '../../types/policyComments'
 import { relativeTime } from '../../utils/time'
 import styles from './DebateComment.module.css'
 

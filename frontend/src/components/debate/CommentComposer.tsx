@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useAuth, getAccessToken } from '../../hooks/useAuth'
 import { Button } from '../ui'
-import type { Comment, Position } from '../../types/debate'
+import type { Comment, Position } from '../../types/policyComments'
 import styles from './CommentComposer.module.css'
 
 interface CommentComposerProps {

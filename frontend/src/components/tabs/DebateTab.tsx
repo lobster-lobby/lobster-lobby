@@ -5,7 +5,7 @@ import PositionBar from '../debate/PositionBar'
 import CommunitySummary from '../debate/CommunitySummary'
 import CommentComposer from '../debate/CommentComposer'
 import DebateComment from '../debate/DebateComment'
-import type { Comment, Position, DebateResponse } from '../../types/debate'
+import type { Comment, Position, DebateResponse } from '../../types/policyComments'
 import styles from './DebateTab.module.css'
 
 interface DebateTabProps {
