@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -100,40 +101,56 @@ func (r *PollRepository) Delete(ctx context.Context, id bson.ObjectID) error {
 }
 
 // Vote casts or replaces a user's vote on a poll (idempotent).
+// Vote counts are updated atomically via $inc to prevent concurrent write corruption.
 func (r *PollRepository) Vote(ctx context.Context, pollID, userID bson.ObjectID, optionIDs []bson.ObjectID) (*models.Poll, error) {
 	// Get the existing vote if any
 	var existing models.PollVote
 	existErr := r.votes.FindOne(ctx, bson.M{"pollId": pollID, "userId": userID}).Decode(&existing)
+	if existErr != nil && !errors.Is(existErr, mongo.ErrNoDocuments) {
+		return nil, existErr
+	}
+	hasExisting := existErr == nil
 
-	poll, err := r.GetByID(ctx, pollID)
+	// Atomically decrement counts for old vote options
+	if hasExisting {
+		for _, optID := range existing.OptionIDs {
+			_, err := r.polls.UpdateOne(ctx,
+				bson.M{"_id": pollID, "options.id": optID},
+				bson.M{"$inc": bson.M{"options.$.votes": -1}},
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+		_, err := r.polls.UpdateOne(ctx,
+			bson.M{"_id": pollID},
+			bson.M{"$inc": bson.M{"totalVotes": -1}},
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Atomically increment counts for new vote options
+	for _, optID := range optionIDs {
+		_, err := r.polls.UpdateOne(ctx,
+			bson.M{"_id": pollID, "options.id": optID},
+			bson.M{"$inc": bson.M{"options.$.votes": 1}},
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+	_, err := r.polls.UpdateOne(ctx,
+		bson.M{"_id": pollID},
+		bson.M{
+			"$inc": bson.M{"totalVotes": 1},
+			"$set": bson.M{"updatedAt": time.Now().UTC()},
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
-
-	if existErr == nil {
-		// Remove old votes from option counts
-		for _, optID := range existing.OptionIDs {
-			for i := range poll.Options {
-				if poll.Options[i].ID == optID {
-					poll.Options[i].Votes--
-					break
-				}
-			}
-		}
-		poll.TotalVotes--
-	}
-
-	// Add new votes
-	for _, optID := range optionIDs {
-		for i := range poll.Options {
-			if poll.Options[i].ID == optID {
-				poll.Options[i].Votes++
-				break
-			}
-		}
-	}
-	poll.TotalVotes++
-	poll.UpdatedAt = time.Now().UTC()
 
 	// Upsert vote record
 	_, err = r.votes.UpdateOne(ctx,
@@ -150,20 +167,7 @@ func (r *PollRepository) Vote(ctx context.Context, pollID, userID bson.ObjectID,
 		return nil, err
 	}
 
-	// Update poll options and total
-	_, err = r.polls.UpdateOne(ctx,
-		bson.M{"_id": pollID},
-		bson.M{"$set": bson.M{
-			"options":    poll.Options,
-			"totalVotes": poll.TotalVotes,
-			"updatedAt":  poll.UpdatedAt,
-		}},
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return poll, nil
+	return r.GetByID(ctx, pollID)
 }
 
 // GetUserVote returns the user's current vote on a poll (nil if none).

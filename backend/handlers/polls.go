@@ -85,6 +85,10 @@ func (h *PollsHandler) Create(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "option text cannot be empty"})
 			return
 		}
+		if len(text) > 200 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "option text exceeds 200 characters"})
+			return
+		}
 		options[i] = models.PollOption{Text: text}
 	}
 
@@ -146,6 +150,10 @@ func (h *PollsHandler) Vote(c *gin.Context) {
 	}
 	if poll.Status == "closed" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "poll is closed"})
+		return
+	}
+	if poll.EndsAt != nil && time.Now().After(*poll.EndsAt) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "poll has ended"})
 		return
 	}
 	if !poll.MultiSelect && len(req.OptionIDs) > 1 {

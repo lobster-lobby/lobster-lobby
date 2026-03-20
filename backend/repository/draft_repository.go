@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -148,6 +149,10 @@ func (r *DraftRepository) Archive(ctx context.Context, id bson.ObjectID) error {
 func (r *DraftRepository) ToggleEndorsement(ctx context.Context, draftID, userID bson.ObjectID) (bool, error) {
 	var existing models.DraftEndorsement
 	err := r.endorsements.FindOne(ctx, bson.M{"draftId": draftID, "userId": userID}).Decode(&existing)
+
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+		return false, err
+	}
 
 	if err == nil {
 		// Already endorsed — remove it

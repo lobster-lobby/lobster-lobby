@@ -77,6 +77,10 @@ func (h *DraftsHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "content is required"})
 		return
 	}
+	if len(req.Content) > 50000 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "content exceeds 50000 characters"})
+		return
+	}
 
 	validCategories := map[string]bool{"amendment": true, "talking-point": true, "position-statement": true, "full-text": true}
 	if req.Category != "" && !validCategories[req.Category] {
@@ -92,6 +96,10 @@ func (h *DraftsHandler) Create(c *gin.Context) {
 	status := req.Status
 	if status == "" {
 		status = "draft"
+	}
+	if status != "draft" && status != "published" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "status must be 'draft' or 'published'"})
+		return
 	}
 
 	draft := &models.Draft{
