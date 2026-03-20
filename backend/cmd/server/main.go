@@ -173,6 +173,18 @@ func main() {
 	debatesHandler := handlers.NewDebatesHandler(debateRepo, userRepo, logger, reputationSvc)
 	moderationHandler := handlers.NewModerationHandler(debateRepo, userRepo, logger)
 
+	pollRepo := repository.NewPollRepository(mongo)
+	if err := pollRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure poll indexes", zap.Error(err))
+	}
+	draftRepo := repository.NewDraftRepository(mongo)
+	if err := draftRepo.EnsureIndexes(bgCtx); err != nil {
+		logger.Warn("failed to ensure draft indexes", zap.Error(err))
+	}
+
+	pollsHandler := handlers.NewPollsHandler(pollRepo, userRepo, logger)
+	draftsHandler := handlers.NewDraftsHandler(draftRepo, userRepo, logger)
+
 	crossRefRepo := repository.NewCrossReferenceRepository(mongo)
 	if err := crossRefRepo.EnsureIndexes(bgCtx); err != nil {
 		logger.Warn("failed to ensure cross-reference indexes", zap.Error(err))
@@ -258,6 +270,14 @@ func main() {
 
 			// Voting records for a policy
 			policies.GET("/:id/votes", repHandler.ListVotesByPolicy)
+
+			// Poll routes
+			policies.GET("/:id/polls", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), pollsHandler.ListByPolicy)
+			policies.POST("/:id/polls", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), pollsHandler.Create)
+
+			// Draft routes
+			policies.GET("/:id/drafts", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), draftsHandler.ListByPolicy)
+			policies.POST("/:id/drafts", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), draftsHandler.Create)
 		}
 
 		campaigns := api.Group("/campaigns")
@@ -327,6 +347,25 @@ func main() {
 			crossRefs.POST("", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), crossRefHandler.Create)
 			crossRefs.GET("", crossRefHandler.List)
 			crossRefs.DELETE("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), crossRefHandler.Delete)
+		}
+
+		// Poll actions
+		polls := api.Group("/polls")
+		polls.Use(middleware.RateLimit(rateLimiter))
+		{
+			polls.POST("/:id/vote", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), pollsHandler.Vote)
+			polls.DELETE("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), pollsHandler.Delete)
+		}
+
+		// Draft actions
+		drafts := api.Group("/drafts")
+		drafts.Use(middleware.RateLimit(rateLimiter))
+		{
+			drafts.PUT("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), draftsHandler.Update)
+			drafts.DELETE("/:id", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), draftsHandler.Delete)
+			drafts.POST("/:id/endorse", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), draftsHandler.Endorse)
+			drafts.GET("/:id/comments", middleware.OptionalAuth(jwtSvc, apiKeyRepo, apiKeySvc), draftsHandler.ListComments)
+			drafts.POST("/:id/comments", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), draftsHandler.AddComment)
 		}
 
 		api.GET("/search", searchHandler.Search)
