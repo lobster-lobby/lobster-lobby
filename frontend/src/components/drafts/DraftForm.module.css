@@ -1,0 +1,83 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-md);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-xs);
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ll-text);
+}
+
+.charCount {
+  font-size: 0.75rem;
+  color: var(--ll-text-secondary);
+  text-align: right;
+}
+
+.select {
+  padding: 8px 12px;
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-sm);
+  background: var(--ll-surface);
+  color: var(--ll-text);
+  font-size: 0.9375rem;
+}
+
+.contentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.previewToggle {
+  font-size: 0.8125rem;
+  color: var(--ll-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.preview {
+  padding: 12px;
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-sm);
+  min-height: 200px;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  background: var(--ll-surface);
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-md);
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-xs);
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.error {
+  color: var(--ll-danger);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ll-space-sm);
+}
