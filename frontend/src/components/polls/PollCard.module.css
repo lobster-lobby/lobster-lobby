@@ -1,0 +1,138 @@
+.card {
+  margin-bottom: var(--ll-space-md);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--ll-space-sm);
+  gap: var(--ll-space-sm);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-sm);
+  font-size: 0.8125rem;
+  color: var(--ll-text-secondary);
+}
+
+.author {
+  font-weight: 600;
+  color: var(--ll-text);
+}
+
+.badges {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-xs);
+  flex-shrink: 0;
+}
+
+.closeBtn {
+  font-size: 0.75rem;
+  color: var(--ll-text-secondary);
+  background: none;
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-sm);
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.closeBtn:hover {
+  color: var(--ll-danger);
+  border-color: var(--ll-danger);
+}
+
+.question {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 var(--ll-space-md);
+  color: var(--ll-text);
+  line-height: 1.4;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-sm);
+  margin-bottom: var(--ll-space-md);
+}
+
+.optionLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--ll-space-sm);
+  padding: 10px 12px;
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-sm);
+  cursor: pointer;
+  font-size: 0.9375rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.optionLabel:hover {
+  border-color: var(--ll-primary);
+}
+
+.optionSelected {
+  border-color: var(--ll-primary);
+  background: color-mix(in srgb, var(--ll-primary) 8%, transparent);
+}
+
+.resultBar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius-sm);
+  overflow: hidden;
+  min-height: 40px;
+}
+
+.userChoice {
+  border-color: var(--ll-primary);
+}
+
+.barFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--ll-primary) 15%, transparent);
+  transition: width 0.4s ease;
+  z-index: 0;
+}
+
+.userChoice .barFill {
+  background: color-mix(in srgb, var(--ll-primary) 25%, transparent);
+}
+
+.barLabel {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  font-size: 0.9375rem;
+}
+
+.barPct {
+  position: relative;
+  z-index: 1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ll-text);
+  margin-left: var(--ll-space-sm);
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.totalVotes {
+  font-size: 0.8125rem;
+  color: var(--ll-text-secondary);
+}

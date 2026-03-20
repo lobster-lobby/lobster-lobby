@@ -293,13 +293,13 @@ export default function PolicyDetail() {
       case 'polls':
         return (
           <Suspense fallback={<Spinner size="lg" />}>
-            <PollsTab />
+            <PollsTab policyId={policy?.id || ''} />
           </Suspense>
         )
       case 'draft':
         return (
           <Suspense fallback={<Spinner size="lg" />}>
-            <DraftTab />
+            <DraftTab policyId={policy?.id || ''} />
           </Suspense>
         )
       default:

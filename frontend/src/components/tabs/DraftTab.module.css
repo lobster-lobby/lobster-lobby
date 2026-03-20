@@ -1,0 +1,72 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-md);
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--ll-text);
+}
+
+.formSection {
+  padding: var(--ll-space-md);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius);
+  background: var(--ll-surface);
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ll-space-sm);
+}
+
+.filters {
+  display: flex;
+  gap: var(--ll-space-xs);
+  flex-wrap: wrap;
+}
+
+.filterPill {
+  padding: 4px 12px;
+  border: 1px solid var(--ll-border);
+  border-radius: 999px;
+  background: none;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: var(--ll-text-secondary);
+  transition: all 0.15s;
+}
+
+.filterPill:hover {
+  border-color: var(--ll-primary);
+  color: var(--ll-primary);
+}
+
+.activeFilter {
+  border-color: var(--ll-primary);
+  background: color-mix(in srgb, var(--ll-primary) 12%, transparent);
+  color: var(--ll-primary);
+  font-weight: 600;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--ll-space-xl);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
