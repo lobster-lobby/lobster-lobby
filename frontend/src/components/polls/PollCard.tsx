@@ -15,6 +15,7 @@ export default function PollCard({ poll, onVoted, onDelete }: PollCardProps) {
   const [selected, setSelected] = useState<string[]>(poll.userVoteOptionIds || [])
   const [voting, setVoting] = useState(false)
   const [hasVoted, setHasVoted] = useState((poll.userVoteOptionIds?.length ?? 0) > 0)
+  const [voteError, setVoteError] = useState('')
 
   const isAuthor = user?.id === poll.authorId
   const isClosed = poll.status === 'closed'
@@ -33,6 +34,7 @@ export default function PollCard({ poll, onVoted, onDelete }: PollCardProps) {
   async function handleVote() {
     if (!isAuthenticated || selected.length === 0 || voting) return
     setVoting(true)
+    setVoteError('')
     try {
       const token = getAccessToken()
       const res = await fetch(`/api/polls/${poll.id}/vote`, {
@@ -45,8 +47,9 @@ export default function PollCard({ poll, onVoted, onDelete }: PollCardProps) {
       updated.userVoteOptionIds = selected
       setHasVoted(true)
       onVoted(updated)
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.error('Vote error:', err)
+      setVoteError('Failed to submit vote. Please try again.')
     } finally {
       setVoting(false)
     }
@@ -55,10 +58,14 @@ export default function PollCard({ poll, onVoted, onDelete }: PollCardProps) {
   async function handleDelete() {
     if (!confirm('Close this poll?')) return
     const token = getAccessToken()
-    await fetch(`/api/polls/${poll.id}`, {
+    const res = await fetch(`/api/polls/${poll.id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` },
     })
+    if (!res.ok) {
+      console.error('Failed to delete poll')
+      return
+    }
     onDelete?.(poll.id)
   }
 
@@ -118,6 +125,8 @@ export default function PollCard({ poll, onVoted, onDelete }: PollCardProps) {
           )
         })}
       </div>
+
+      {voteError && <p className={styles.voteError}>{voteError}</p>}
 
       <div className={styles.footer}>
         <span className={styles.totalVotes}>{poll.totalVotes} vote{poll.totalVotes !== 1 ? 's' : ''}</span>

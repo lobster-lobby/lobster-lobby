@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { getAccessToken } from '../../hooks/useAuth'
 import { Button, Input, Textarea } from '../ui'
 import type { Draft, DraftCategory, DraftStatus, CreateDraftPayload } from '../../types/draft'
@@ -92,9 +93,9 @@ export default function DraftForm({ policyId, draft, onSaved, onCancel }: DraftF
           </button>
         </div>
         {preview ? (
-          <div className={styles.preview}
-            dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }}
-          />
+          <div className={styles.preview}>
+            <ReactMarkdown>{content}</ReactMarkdown>
+          </div>
         ) : (
           <Textarea
             value={content}

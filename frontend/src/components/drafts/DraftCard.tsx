@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { useAuth, getAccessToken } from '../../hooks/useAuth'
 import { Card, Badge } from '../ui'
 import DraftComments from './DraftComments'
@@ -33,12 +34,14 @@ export default function DraftCard({ draft, onUpdated, onDeleted }: DraftCardProp
   const [endorsing, setEndorsing] = useState(false)
   const [endorsed, setEndorsed] = useState(draft.userEndorsed ?? false)
   const [endorsementCount, setEndorsementCount] = useState(draft.endorsements)
+  const [endorseError, setEndorseError] = useState('')
 
   const isAuthor = user?.id === draft.authorId
 
   async function handleEndorse() {
     if (!isAuthenticated || endorsing) return
     setEndorsing(true)
+    setEndorseError('')
     try {
       const token = getAccessToken()
       const res = await fetch(`/api/drafts/${draft.id}/endorse`, {
@@ -50,8 +53,9 @@ export default function DraftCard({ draft, onUpdated, onDeleted }: DraftCardProp
       const newEndorsed = !endorsed
       setEndorsed(newEndorsed)
       setEndorsementCount(data.endorsements ?? endorsementCount + (newEndorsed ? 1 : -1))
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.error('Endorse error:', err)
+      setEndorseError('Failed to update endorsement. Please try again.')
     } finally {
       setEndorsing(false)
     }
@@ -60,10 +64,14 @@ export default function DraftCard({ draft, onUpdated, onDeleted }: DraftCardProp
   async function handleDelete() {
     if (!confirm('Archive this draft?')) return
     const token = getAccessToken()
-    await fetch(`/api/drafts/${draft.id}`, {
+    const res = await fetch(`/api/drafts/${draft.id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` },
     })
+    if (!res.ok) {
+      console.error('Failed to delete draft')
+      return
+    }
     onDeleted(draft.id)
   }
 
@@ -72,7 +80,18 @@ export default function DraftCard({ draft, onUpdated, onDeleted }: DraftCardProp
 
   return (
     <Card className={styles.card}>
-      <div className={styles.cardHeader} onClick={() => !editing && setExpanded(!expanded)} role="button" tabIndex={0}>
+      <div
+        className={styles.cardHeader}
+        onClick={() => !editing && setExpanded(!expanded)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && !editing) {
+            e.preventDefault()
+            setExpanded(!expanded)
+          }
+        }}
+      >
         <div className={styles.titleRow}>
           <h4 className={styles.title}>{draft.title}</h4>
           <Badge variant={categoryVariant[draft.category]}>{categoryLabel[draft.category]}</Badge>
@@ -94,6 +113,7 @@ export default function DraftCard({ draft, onUpdated, onDeleted }: DraftCardProp
           >
             ★ {endorsementCount} Endorse{endorsementCount !== 1 ? 's' : ''}
           </button>
+          {endorseError && <span className={styles.errorText}>{endorseError}</span>}
           {isAuthor && (
             <div className={styles.authorActions}>
               <button className={styles.actionBtn} onClick={() => { setEditing(true); setExpanded(true) }} type="button">Edit</button>
@@ -116,9 +136,9 @@ export default function DraftCard({ draft, onUpdated, onDeleted }: DraftCardProp
             />
           ) : (
             <>
-              <div className={styles.content}
-                dangerouslySetInnerHTML={{ __html: draft.content.replace(/\n/g, '<br>') }}
-              />
+              <div className={styles.content}>
+                <ReactMarkdown>{draft.content}</ReactMarkdown>
+              </div>
               <DraftComments draftId={draft.id} />
             </>
           )}

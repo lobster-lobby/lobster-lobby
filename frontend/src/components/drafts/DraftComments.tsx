@@ -14,6 +14,7 @@ export default function DraftComments({ draftId }: DraftCommentsProps) {
   const [loading, setLoading] = useState(true)
   const [text, setText] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
   const fetchComments = useCallback(async () => {
     setLoading(true)
@@ -25,8 +26,9 @@ export default function DraftComments({ draftId }: DraftCommentsProps) {
       if (!res.ok) throw new Error('Failed to fetch comments')
       const data = await res.json()
       setComments(Array.isArray(data) ? data : data.comments ?? [])
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.error('Failed to fetch comments:', err)
+      setError('Failed to load comments.')
     } finally {
       setLoading(false)
     }
@@ -51,8 +53,10 @@ export default function DraftComments({ draftId }: DraftCommentsProps) {
       const comment: DraftComment = await res.json()
       setComments((prev) => [...prev, comment])
       setText('')
-    } catch {
-      // silently fail
+      setError('')
+    } catch (err) {
+      console.error('Failed to post comment:', err)
+      setError('Failed to post comment. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -61,6 +65,8 @@ export default function DraftComments({ draftId }: DraftCommentsProps) {
   return (
     <div className={styles.wrapper}>
       <h4 className={styles.heading}>Comments</h4>
+
+      {error && <p className={styles.error}>{error}</p>}
 
       {loading ? (
         <div className={styles.loading}><Spinner size="sm" /></div>

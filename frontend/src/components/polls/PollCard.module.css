@@ -23,6 +23,10 @@
   color: var(--ll-text);
 }
 
+.time {
+  color: var(--ll-text-secondary);
+}
+
 .badges {
   display: flex;
   align-items: center;
@@ -135,4 +139,10 @@
 .totalVotes {
   font-size: 0.8125rem;
   color: var(--ll-text-secondary);
+}
+
+.voteError {
+  font-size: 0.8125rem;
+  color: var(--ll-danger);
+  margin: 0 0 var(--ll-space-sm);
 }

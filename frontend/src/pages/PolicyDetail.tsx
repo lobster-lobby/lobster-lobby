@@ -291,17 +291,17 @@ export default function PolicyDetail() {
         )
       }
       case 'polls':
-        return (
+        return policy?.id ? (
           <Suspense fallback={<Spinner size="lg" />}>
-            <PollsTab policyId={policy?.id || ''} />
+            <PollsTab policyId={policy.id} />
           </Suspense>
-        )
+        ) : null
       case 'draft':
-        return (
+        return policy?.id ? (
           <Suspense fallback={<Spinner size="lg" />}>
-            <DraftTab policyId={policy?.id || ''} />
+            <DraftTab policyId={policy.id} />
           </Suspense>
-        )
+        ) : null
       default:
         return null
     }

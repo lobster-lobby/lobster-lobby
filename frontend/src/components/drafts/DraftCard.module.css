@@ -122,3 +122,9 @@
   line-height: 1.7;
   color: var(--ll-text);
 }
+
+
+.errorText {
+  font-size: 0.8125rem;
+  color: var(--ll-danger);
+}
