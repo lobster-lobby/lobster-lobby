@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -17,14 +18,17 @@ import (
 
 var usernameRe = regexp.MustCompile(`^[a-zA-Z0-9_]{3,30}$`)
 
+const refreshCookieName = "refresh_token"
+
 type AuthHandler struct {
-	users  *repository.UserRepository
-	tokens *repository.RefreshTokenRepository
-	jwtSvc *services.JWTService
+	users    *repository.UserRepository
+	tokens   *repository.RefreshTokenRepository
+	jwtSvc   *services.JWTService
+	secureCookie bool
 }
 
-func NewAuthHandler(users *repository.UserRepository, tokens *repository.RefreshTokenRepository, jwtSvc *services.JWTService) *AuthHandler {
-	return &AuthHandler{users: users, tokens: tokens, jwtSvc: jwtSvc}
+func NewAuthHandler(users *repository.UserRepository, tokens *repository.RefreshTokenRepository, jwtSvc *services.JWTService, env string) *AuthHandler {
+	return &AuthHandler{users: users, tokens: tokens, jwtSvc: jwtSvc, secureCookie: env == "production"}
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -102,31 +106,46 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	access, refresh, err := h.issueTokenPair(c, user)
+	access, err := h.issueTokenPair(c, user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to issue tokens"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"user": user, "accessToken": access, "refreshToken": refresh})
+	c.JSON(http.StatusCreated, gin.H{"user": user, "token": access})
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req struct {
-		Email    string `json:"email"`
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Identifier string `json:"identifier"`
+		Email      string `json:"email"`
+		Username   string `json:"username"`
+		Password   string `json:"password"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Normalise: prefer the combined "identifier" field, fall back to explicit fields.
+	// We treat the identifier as an email when it contains "@" — a lightweight heuristic
+	// that avoids a round-trip DB look-up while covering all realistic login inputs
+	// (usernames are restricted to alphanumeric + underscore and cannot contain "@").
+	email := req.Email
+	username := req.Username
+	if req.Identifier != "" {
+		if strings.Contains(req.Identifier, "@") {
+			email = req.Identifier
+		} else {
+			username = req.Identifier
+		}
+	}
+
 	var user *models.User
-	if req.Email != "" {
-		user, _ = h.users.FindByEmail(c, req.Email)
-	} else if req.Username != "" {
-		user, _ = h.users.FindByUsername(c, req.Username)
+	if email != "" {
+		user, _ = h.users.FindByEmail(c, email)
+	} else if username != "" {
+		user, _ = h.users.FindByUsername(c, username)
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "email or username required"})
 		return
@@ -139,31 +158,29 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	_ = h.users.UpdateLastLogin(c, user.ID)
 
-	access, refresh, err := h.issueTokenPair(c, user)
+	access, err := h.issueTokenPair(c, user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to issue tokens"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user": user, "accessToken": access, "refreshToken": refresh})
+	c.JSON(http.StatusOK, gin.H{"user": user, "token": access})
 }
 
 func (h *AuthHandler) Refresh(c *gin.Context) {
-	var req struct {
-		RefreshToken string `json:"refreshToken"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil || req.RefreshToken == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "refreshToken required"})
+	tokenVal, err := c.Cookie(refreshCookieName)
+	if err != nil || tokenVal == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "no refresh token"})
 		return
 	}
 
-	rt, err := h.tokens.FindByToken(c, req.RefreshToken)
+	rt, err := h.tokens.FindByToken(c, tokenVal)
 	if err != nil || rt == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
 		return
 	}
 
-	_ = h.tokens.DeleteByToken(c, req.RefreshToken)
+	_ = h.tokens.DeleteByToken(c, tokenVal)
 
 	user, err := h.users.FindByID(c, rt.UserID)
 	if err != nil || user == nil {
@@ -171,13 +188,22 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	access, refresh, err := h.issueTokenPair(c, user)
+	access, err := h.issueTokenPair(c, user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to issue tokens"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"accessToken": access, "refreshToken": refresh})
+	c.JSON(http.StatusOK, gin.H{"token": access})
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	tokenVal, err := c.Cookie(refreshCookieName)
+	if err == nil && tokenVal != "" {
+		_ = h.tokens.DeleteByToken(c, tokenVal)
+	}
+	c.SetCookie(refreshCookieName, "", -1, "/api/auth", "", h.secureCookie, true)
+	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
 
 func (h *AuthHandler) Me(c *gin.Context) {
@@ -202,15 +228,15 @@ func (h *AuthHandler) Me(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
-func (h *AuthHandler) issueTokenPair(c *gin.Context, user *models.User) (string, string, error) {
-	access, err := h.jwtSvc.GenerateAccessToken(user.ID.Hex(), user.Type, user.Role)
+func (h *AuthHandler) issueTokenPair(c *gin.Context, user *models.User) (string, error) {
+	access, err := h.jwtSvc.GenerateAccessToken(user.ID.Hex(), user.Type, user.Role, user.Username, user.Email)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	refresh, expiresAt, err := h.jwtSvc.GenerateRefreshToken()
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	rt := &repository.RefreshToken{
@@ -219,8 +245,15 @@ func (h *AuthHandler) issueTokenPair(c *gin.Context, user *models.User) (string,
 		ExpiresAt: expiresAt,
 	}
 	if err := h.tokens.Create(c, rt); err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	return access, refresh, nil
+	maxAge := int(time.Until(expiresAt).Seconds())
+	// Scope the refresh-token cookie to /api/auth so it is never sent with
+	// regular API calls — this limits the attack surface if XSS occurs.
+	// The token-refresh and logout endpoints both live under this path, so
+	// restricting the scope does not break any legitimate flow.
+	c.SetCookie(refreshCookieName, refresh, maxAge, "/api/auth", "", h.secureCookie, true)
+
+	return access, nil
 }
