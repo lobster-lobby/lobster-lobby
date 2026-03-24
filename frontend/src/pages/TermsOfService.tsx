@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import styles from './TermsOfService.module.css'
+import styles from './legal.module.css'
 
 const LAST_UPDATED = 'March 24, 2026'
 
@@ -105,7 +105,7 @@ export default function TermsOfService() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>8. Disclaimers & Limitation of Liability</h2>
+        <h2 className={styles.sectionTitle}>8. Disclaimers &amp; Limitation of Liability</h2>
         <p className={styles.text}>
           The Service is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any
           kind, either express or implied. We do not warrant that the Service will be uninterrupted,
@@ -119,7 +119,18 @@ export default function TermsOfService() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>9. Changes to Terms</h2>
+        <h2 className={styles.sectionTitle}>9. Governing Law</h2>
+        <p className={styles.text}>
+          These Terms of Service shall be governed by and construed in accordance with the laws of
+          the State of Michigan, United States, without regard to its conflict of law provisions.
+          Any dispute arising from or relating to these Terms or the Service shall be subject to
+          the exclusive jurisdiction of the state and federal courts located in the State of
+          Michigan, United States.
+        </p>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>10. Changes to Terms</h2>
         <p className={styles.text}>
           We reserve the right to modify these Terms at any time. We will notify users of material
           changes by updating the "Last updated" date at the top of this page. Your continued use
@@ -128,7 +139,7 @@ export default function TermsOfService() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>10. Contact Us</h2>
+        <h2 className={styles.sectionTitle}>11. Contact Us</h2>
         <p className={styles.text}>
           If you have any questions about these Terms, please contact us at:
         </p>
@@ -143,9 +154,14 @@ export default function TermsOfService() {
           Also see our <Link to="/privacy">Privacy Policy</Link> for information about how we
           handle your data.
         </p>
-        <Link to="/register" className={styles.backLink}>
-          ← Back to Registration
-        </Link>
+        <div className={styles.navLinks}>
+          <Link to="/" className={styles.backLink}>
+            ← Home
+          </Link>
+          <Link to="/register" className={styles.backLink}>
+            ← Back to Registration
+          </Link>
+        </div>
       </footer>
     </div>
   )

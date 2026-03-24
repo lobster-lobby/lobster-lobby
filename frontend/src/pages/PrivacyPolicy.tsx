@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import styles from './TermsOfService.module.css'
+import styles from './legal.module.css'
 
 const LAST_UPDATED = 'March 24, 2026'
 
@@ -101,7 +101,7 @@ export default function PrivacyPolicy() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>5. Cookies & Tracking</h2>
+        <h2 className={styles.sectionTitle}>5. Cookies &amp; Tracking</h2>
         <p className={styles.text}>
           We use cookies and similar tracking technologies to operate the Service:
         </p>
@@ -209,9 +209,14 @@ export default function PrivacyPolicy() {
           Also see our <Link to="/terms">Terms of Service</Link> for the rules governing use of
           the platform.
         </p>
-        <Link to="/register" className={styles.backLink}>
-          ← Back to Registration
-        </Link>
+        <div className={styles.navLinks}>
+          <Link to="/" className={styles.backLink}>
+            ← Home
+          </Link>
+          <Link to="/register" className={styles.backLink}>
+            ← Back to Registration
+          </Link>
+        </div>
       </footer>
     </div>
   )
