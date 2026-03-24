@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { PolicyCard } from '../components/PolicyCard'
@@ -12,21 +12,24 @@ export default function PublicFeed() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function fetchPolicies() {
-      try {
-        const res = await fetch('/api/policies?sort=hot&perPage=10')
-        if (!res.ok) throw new Error('Failed to load policies')
-        const data = await res.json()
-        setPolicies(data.policies || [])
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong')
-      } finally {
-        setLoading(false)
-      }
+  const fetchPolicies = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/policies?sort=hot&perPage=10')
+      if (!res.ok) throw new Error('Failed to load policies')
+      const data = await res.json()
+      setPolicies(data.policies || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setLoading(false)
     }
-    fetchPolicies()
   }, [])
+
+  useEffect(() => {
+    fetchPolicies()
+  }, [fetchPolicies])
 
   return (
     <div className={styles.page}>
@@ -83,7 +86,7 @@ export default function PublicFeed() {
             <p className={styles.emptyBody}>{error}</p>
             <button
               className={styles.ctaPrimary}
-              onClick={() => window.location.reload()}
+              onClick={fetchPolicies}
             >
               Try again
             </button>

@@ -127,7 +127,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Normalise: prefer the combined "identifier" field, fall back to explicit fields
+	// Normalise: prefer the combined "identifier" field, fall back to explicit fields.
+	// We treat the identifier as an email when it contains "@" — a lightweight heuristic
+	// that avoids a round-trip DB look-up while covering all realistic login inputs
+	// (usernames are restricted to alphanumeric + underscore and cannot contain "@").
 	email := req.Email
 	username := req.Username
 	if req.Identifier != "" {
@@ -246,6 +249,10 @@ func (h *AuthHandler) issueTokenPair(c *gin.Context, user *models.User) (string,
 	}
 
 	maxAge := int(time.Until(expiresAt).Seconds())
+	// Scope the refresh-token cookie to /api/auth so it is never sent with
+	// regular API calls — this limits the attack surface if XSS occurs.
+	// The token-refresh and logout endpoints both live under this path, so
+	// restricting the scope does not break any legitimate flow.
 	c.SetCookie(refreshCookieName, refresh, maxAge, "/api/auth", "", h.secureCookie, true)
 
 	return access, nil
