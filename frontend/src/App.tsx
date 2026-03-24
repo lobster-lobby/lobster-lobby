@@ -25,6 +25,8 @@ import DebateDetail from './pages/DebateDetail'
 import AdminModeration from './pages/AdminModeration'
 import ApiDocs from './pages/ApiDocs'
 import NotFound from './pages/NotFound'
+import TermsOfService from './pages/TermsOfService'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 import './styles/global.css'
 
 export default function App() {
@@ -37,6 +39,8 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/feed" element={<PublicFeed />} />
           <Route element={<AppLayout />}>
             <Route path="/policies/:slug" element={<PolicyDetail />} />
