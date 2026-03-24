@@ -115,7 +115,7 @@ func main() {
 		logger.Warn("failed to ensure campaign event indexes", zap.Error(err))
 	}
 
-	authHandler := handlers.NewAuthHandler(userRepo, refreshTokenRepo, jwtSvc)
+	authHandler := handlers.NewAuthHandler(userRepo, refreshTokenRepo, jwtSvc, cfg.Env)
 	policyHandler := handlers.NewPolicyHandler(policyRepo, userRepo, jwtSvc, logger, reputationSvc, searchSvc)
 	campaignHandler := handlers.NewCampaignHandler(campaignRepo, policyRepo, userRepo, campaignEventRepo, jwtSvc, reputationSvc, logger)
 	campaignCommentHandler := handlers.NewCampaignCommentHandler(campaignCommentRepo, campaignRepo, userRepo, campaignEventRepo, campaignActivityRepo, logger)
@@ -217,6 +217,7 @@ func main() {
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/refresh", authHandler.Refresh)
+			auth.POST("/logout", authHandler.Logout)
 			auth.GET("/me", middleware.RequireAuth(jwtSvc, apiKeyRepo, apiKeySvc), authHandler.Me)
 		}
 

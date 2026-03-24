@@ -15,23 +15,27 @@ type JWTService struct {
 
 type Claims struct {
 	jwt.RegisteredClaims
-	Type string `json:"type"`
-	Role string `json:"role"`
+	Type     string `json:"type"`
+	Role     string `json:"role"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
 }
 
 func NewJWTService(secret string) *JWTService {
 	return &JWTService{secret: []byte(secret)}
 }
 
-func (s *JWTService) GenerateAccessToken(userID, userType, role string) (string, error) {
+func (s *JWTService) GenerateAccessToken(userID, userType, role, username, email string) (string, error) {
 	claims := Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   userID,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
 		},
-		Type: userType,
-		Role: role,
+		Type:     userType,
+		Role:     role,
+		Username: username,
+		Email:    email,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(s.secret)
